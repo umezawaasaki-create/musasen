@@ -690,7 +690,7 @@ function openSummary(){
 }
 function closeSummary(){document.getElementById('sum-modal').classList.remove('open');}
 function copyText(id){const el=document.getElementById(id);if(navigator.clipboard)navigator.clipboard.writeText(el.textContent).then(()=>alert('コピーしました！'));else{const r=document.createRange();r.selectNode(el);window.getSelection().removeAllRanges();window.getSelection().addRange(r);document.execCommand('copy');alert('コピーしました！');}}
-const GAS_URL='';
+const GAS_URL='https://script.google.com/macros/s/AKfycbxlQu-oxVoZ7K_JWAorO36kwNaQ6GxeZF0QtyJXuGPkF7LiCBLZWBrBpxURevhW9euo/exec';
 function sendToSheets(){if(!GAS_URL){alert('スプレッドシート連携の設定がまだです。\nmusasen-setup.htmlを参照してください。');return;}alert('送信機能はGAS URLを設定後に利用できます。');}
 
 // ============================================================
