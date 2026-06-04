@@ -346,7 +346,7 @@ function showSync(ok=true){const el=document.getElementById('sync-badge');if(!el
 async function loadGames(){
   try {
     console.log('loadGames: connecting to Supabase...');
-    const{data,error}=await sb.from('games').select('*').order('created_at',{ascending:false});
+    const{data,error}=await sb.from('games').select('*').order('date',{ascending:false});
     if(error){console.error('Supabase error:',error.message,error);showSync(false);renderGameList();return;}
     console.log('loadGames: got',data?data.length:0,'rows');
     games=data.map(r=>({id:r.id,opp:r.opp,date:r.date,venue:r.venue,status:r.status,orders:r.orders||9,scores:r.scores,batters:r.batters,pinchHitters:r.pinch_hitters,pitchers:r.pitchers,finalScore:r.final_score}));
@@ -493,11 +493,14 @@ function showScreen(name){
 function renderGameList(){
   const upEl=document.getElementById('gamelist-upcoming');
   const doneEl=document.getElementById('gamelist-done');
-  console.log('renderGameList: upEl=',!!upEl,'games=',games.length);
   if(!upEl){console.error('gamelist-upcoming not found!');return;}
-  const upcoming=games.filter(g=>g.status==='upcoming'||g.status==='inprogress');
-  const done=games.filter(g=>g.status==='done');
-  console.log('upcoming:',upcoming.length,'done:',done.length);
+  // 日付で降順ソート（新しい順）、ステータスに関わらず順番を維持
+  const sorted=[...games].sort((a,b)=>{
+    const da=a.date||'';const db=b.date||'';
+    return db.localeCompare(da);
+  });
+  const upcoming=sorted.filter(g=>g.status==='upcoming'||g.status==='inprogress');
+  const done=sorted.filter(g=>g.status==='done');
   upEl.innerHTML=upcoming.length?upcoming.map(g=>gameCard(g)).join(''):'<p style="color:var(--dimmer);font-size:14px;padding:10px 0;">予定されている試合はありません</p>';
   doneEl.innerHTML=done.length?done.map(g=>gameCard(g)).join(''):'<p style="color:var(--dimmer);font-size:14px;padding:10px 0;">記録済みの試合はありません</p>';
 }
