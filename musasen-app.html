@@ -219,18 +219,23 @@ select.sel.sel-pos{flex:0 0 80px;}
 .ss-lbl{font-size:11px;color:var(--dim);}
 
 /* ===== SCORE BOARD ===== */
-.scoreboard-wrap{padding:14px 10px;}
-.scoreboard-table{width:100%;border-collapse:collapse;background:var(--surface);border-radius:12px;overflow:hidden;border:1px solid var(--border);margin-bottom:16px;}
-.scoreboard-table th{background:var(--surface2);color:var(--dimmer);font-size:13px;padding:10px 4px;text-align:center;font-weight:700;border-bottom:2px solid var(--border);}
-.scoreboard-table th.team-col{text-align:left;padding-left:12px;min-width:90px;}
-.scoreboard-table th.total-col{color:var(--gold);border-left:1px solid var(--border);}
-.sc-cell{font-family:'Bebas Neue',cursive;font-size:22px;text-align:center;padding:6px 3px;border-top:1px solid var(--border);color:var(--text);}
-.sc-cell-btn{width:100%;min-height:52px;border-radius:10px;border:2px solid var(--border);background:var(--surface2);color:var(--text);font-family:'Bebas Neue',cursive;font-size:24px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;}
-.sc-cell-btn:active{transform:scale(.9);}
-.my-row .sc-cell-btn{border-color:rgba(240,192,64,.4);color:var(--gold);background:rgba(240,192,64,.08);}
-.opp-row .sc-cell-btn{border-color:var(--border);color:var(--text);}
-.sc-cell.total-cell{font-size:26px;font-weight:900;border-left:1px solid var(--border);}
-.sc-cell.total-cell.my-row{color:var(--gold);}
+.scoreboard-wrap{padding:14px 12px;}
+/* 縦型スコアボード */
+.sb-header{display:grid;grid-template-columns:48px 1fr 1fr;gap:8px;margin-bottom:6px;padding:0 4px;}
+.sb-header-cell{text-align:center;font-size:13px;font-weight:700;color:var(--dim);padding:6px 0;}
+.sb-header-cell.my{color:var(--gold);}
+.sb-row{display:grid;grid-template-columns:48px 1fr 1fr;gap:8px;margin-bottom:8px;align-items:center;}
+.sb-inn-label{font-family:'Bebas Neue',cursive;font-size:18px;color:var(--dimmer);text-align:center;letter-spacing:1px;}
+.sb-score-btn{width:100%;height:58px;border-radius:12px;border:2px solid var(--border);background:var(--surface2);color:var(--text);font-family:'Bebas Neue',cursive;font-size:28px;cursor:pointer;transition:all .15s;}
+.sb-score-btn:active{transform:scale(.93);}
+.sb-score-btn.my-btn{border-color:rgba(240,192,64,.5);color:var(--gold);background:rgba(240,192,64,.08);}
+.sb-score-btn.has-score{border-width:2px;}
+.sb-score-btn.my-btn.has-score{border-color:var(--gold);background:rgba(240,192,64,.18);}
+.sb-score-btn.opp-btn.has-score{border-color:var(--blue);color:var(--blue);background:rgba(52,152,219,.1);}
+.sb-total-row{display:grid;grid-template-columns:48px 1fr 1fr;gap:8px;margin-top:6px;padding-top:10px;border-top:2px solid var(--border);}
+.sb-total-label{font-size:13px;color:var(--dim);font-weight:700;text-align:center;display:flex;align-items:center;justify-content:center;}
+.sb-total-score{text-align:center;font-family:'Bebas Neue',cursive;font-size:40px;line-height:1;}
+.sb-total-score.my{color:var(--gold);}
 .sc-team-name{text-align:left;padding:12px 12px;font-size:14px;font-weight:700;border-top:1px solid var(--border);}
 .sc-team-name.my-row{color:var(--gold);}
 /* 数字入力モーダル */
@@ -849,40 +854,30 @@ function renderScoreInput(){
   const result = currentGame ? (currentGame.matchResult||'') : '';
   const oppName = currentGame ? currentGame.opp : '相手';
 
-  // スコアボード表
-  let innHeaders = '';
-  let myRow = '';
-  let oppRow = '';
+  // 縦型スコアボード
+  let rows = '';
   for(let i=1;i<=INNINGS;i++){
-    innHeaders += `<th>${i}</th>`;
-    myRow  += `<td class="sc-cell my-row"><button class="sc-cell-btn" onclick="openNumModal(${i},'top')">${scores[i].top??0}</button></td>`;
-    oppRow += `<td class="sc-cell opp-row"><button class="sc-cell-btn" onclick="openNumModal(${i},'bot')">${scores[i].bot??0}</button></td>`;
+    const ms = scores[i].top ?? 0;
+    const os = scores[i].bot ?? 0;
+    rows += `<div class="sb-row">
+      <div class="sb-inn-label">${i}回</div>
+      <button class="sb-score-btn my-btn${ms>0?' has-score':''}" onclick="openNumModal(${i},'top')">${ms}</button>
+      <button class="sb-score-btn opp-btn${os>0?' has-score':''}" onclick="openNumModal(${i},'bot')">${os}</button>
+    </div>`;
   }
 
   const html = `
     <div class="scoreboard-wrap">
-      <div style="overflow-x:auto;">
-        <table class="scoreboard-table">
-          <thead>
-            <tr>
-              <th class="team-col">チーム</th>
-              ${innHeaders}
-              <th class="total-col">計</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="sc-team-name my-row">ムサセン</td>
-              ${myRow}
-              <td class="sc-cell total-cell my-row">${myTotal}</td>
-            </tr>
-            <tr>
-              <td class="sc-team-name">${oppName}</td>
-              ${oppRow}
-              <td class="sc-cell total-cell">${oppTotal}</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="sb-header">
+        <div></div>
+        <div class="sb-header-cell my">ムサセン</div>
+        <div class="sb-header-cell">${oppName}</div>
+      </div>
+      ${rows}
+      <div class="sb-total-row">
+        <div class="sb-total-label">計</div>
+        <div class="sb-total-score my">${myTotal}</div>
+        <div class="sb-total-score">${oppTotal}</div>
       </div>
       <div class="sc-result">
         <button class="sc-result-btn${result==='勝'?' win':''}" onclick="setMatchResult('勝')">🏆 勝ち</button>
