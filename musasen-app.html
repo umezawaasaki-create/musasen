@@ -988,7 +988,16 @@ function renderPitcherRanking(){
   }else{
     data=data.map(r=>({...r,era:r.era,ipDisp:r.ip+'.'+(r.ip3||0)}));
   }
-  data=[...data].filter(r=>r.ip>0).sort((a,b)=>a.era-b.era);
+  data=[...data].filter(r=>r.ip>0).sort((a,b)=>{
+    // 勝数降順
+    if(b.w!==a.w) return b.w-a.w;
+    // 防御率昇順（999は最下位）
+    const ea=a.era===999?9999:a.era;
+    const eb=b.era===999?9999:b.era;
+    if(Math.abs(ea-eb)>0.001) return ea-eb;
+    // イニング降順
+    return b.ip-a.ip;
+  });
   list.innerHTML=data.map((r,i)=>{
     const nc=i===0?'gold':i===1?'silver':i===2?'bronze':'other';
     const ec=r.era<3?'color:var(--gb)':r.era<6?'color:var(--gold)':'color:var(--rb)';
