@@ -258,7 +258,11 @@ select.sel.sel-pos{flex:0 0 80px;}
     <div class="g-hdr-logo">⚾ MUSASEN</div>
     <div class="g-hdr-sub" id="game-info-disp">東京スカイツリーグ</div>
   </div>
-  <button class="btn-summary" id="btn-summary" onclick="openSummary()" style="display:none;font-size:11px;">転記用<br>まとめ</button>
+  <!-- スコア入力中のみ表示 -->
+  <div id="scoreinput-actions" style="display:none;display:flex;gap:6px;flex-shrink:0;">
+    <button onclick="saveAndBack()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:12px;font-weight:700;padding:8px 10px;border-radius:10px;cursor:pointer;white-space:nowrap;">保存して戻る</button>
+    <button onclick="confirmScore()" style="background:var(--gold);border:none;color:#1a1a1a;font-family:'Noto Sans JP',sans-serif;font-size:12px;font-weight:900;padding:8px 10px;border-radius:10px;cursor:pointer;white-space:nowrap;">スコア確定</button>
+  </div>
 </div>
 <!-- 試合リスト -->
 <div id="screen-score" class="screen active">
@@ -272,14 +276,10 @@ select.sel.sel-pos{flex:0 0 80px;}
 </div>
 <!-- スコア入力 -->
 <div id="screen-scoreinput" class="screen">
-  <div style="background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:56px;z-index:150;">
-    <div class="sub-tabs" style="gap:0;border-bottom:none;">
-      <div class="sub-tab" onclick="showSubTab('score')" style="flex:1;">🔢 点数</div>
-      <div class="sub-tab active" onclick="showSubTab('bat')" style="flex:1;">⚾ 打撃</div>
-      <div class="sub-tab" onclick="showSubTab('pit')" style="flex:1;">🎽 投手</div>
-      <button onclick="tempSave()" style="background:var(--surface2);border:none;border-left:1px solid var(--border);color:var(--dim);font-size:12px;font-weight:700;padding:0 12px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;white-space:nowrap;">一時保存</button>
-      <button onclick="confirmScore()" style="background:var(--gold);border:none;color:#1a1a1a;font-size:12px;font-weight:900;padding:0 12px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;white-space:nowrap;">スコア確定</button>
-    </div>
+  <div class="sub-tabs" style="justify-content:flex-start;gap:0;">
+    <div class="sub-tab" onclick="showSubTab('score')" style="flex:1;">🔢 点数</div>
+    <div class="sub-tab active" onclick="showSubTab('bat')" style="flex:1;">⚾ 打撃</div>
+    <div class="sub-tab" onclick="showSubTab('pit')" style="flex:1;">🎽 投手</div>
   </div>
   <!-- 点数入力タブ -->
   <div id="subtab-score" style="display:none;">
@@ -540,6 +540,8 @@ function showScreen(name){
   ['score','archive'].forEach(s=>{document.getElementById('nav-'+s).classList.toggle('active',s===name);});
   // scoreinput中はナビ非表示
   document.querySelector('.main-nav').style.display = name==='scoreinput' ? 'none' : 'flex';
+  const acts = document.getElementById('scoreinput-actions');
+  if(acts) acts.style.display = name==='scoreinput' ? 'flex' : 'none';
   if(name==='archive')renderRanking();
 }
 // GAME LIST
@@ -602,7 +604,14 @@ function openGame(gameId){
   setTimeout(()=>{renderBatters();renderPitchers('my');renderPitchers('opp');showSubTab('score');},50);
 }
 
-function tempSave(){
+function saveAndBack(){
+  saveCurrentGame();
+  document.getElementById('game-info-disp').textContent='東京スカイツリーグ';
+  currentGame=null;
+  loadGames();
+  showScreen('score');
+}
+function tempSave(){ saveAndBack(); }
   saveCurrentGame();
   const btn = event.target;
   btn.textContent='✅ 保存済み';
