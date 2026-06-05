@@ -224,10 +224,11 @@ select.sel.sel-pos{flex:0 0 80px;}
 .scoreboard-table th{background:var(--surface2);color:var(--dimmer);font-size:13px;padding:10px 4px;text-align:center;font-weight:700;border-bottom:2px solid var(--border);}
 .scoreboard-table th.team-col{text-align:left;padding-left:12px;min-width:90px;}
 .scoreboard-table th.total-col{color:var(--gold);border-left:1px solid var(--border);}
-.sc-cell{font-family:'Bebas Neue',cursive;font-size:22px;text-align:center;padding:12px 4px;cursor:pointer;transition:background .15s;border-top:1px solid var(--border);color:var(--text);}
-.sc-cell:active{background:rgba(240,192,64,.2);}
-.sc-cell.my-row{color:var(--gold);}
-.sc-cell.opp-row{color:var(--text);}
+.sc-cell{font-family:'Bebas Neue',cursive;font-size:22px;text-align:center;padding:6px 3px;border-top:1px solid var(--border);color:var(--text);}
+.sc-cell-btn{width:100%;min-height:52px;border-radius:10px;border:2px solid var(--border);background:var(--surface2);color:var(--text);font-family:'Bebas Neue',cursive;font-size:24px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;}
+.sc-cell-btn:active{transform:scale(.9);}
+.my-row .sc-cell-btn{border-color:rgba(240,192,64,.4);color:var(--gold);background:rgba(240,192,64,.08);}
+.opp-row .sc-cell-btn{border-color:var(--border);color:var(--text);}
 .sc-cell.total-cell{font-size:26px;font-weight:900;border-left:1px solid var(--border);}
 .sc-cell.total-cell.my-row{color:var(--gold);}
 .sc-team-name{text-align:left;padding:12px 12px;font-size:14px;font-weight:700;border-top:1px solid var(--border);}
@@ -854,8 +855,8 @@ function renderScoreInput(){
   let oppRow = '';
   for(let i=1;i<=INNINGS;i++){
     innHeaders += `<th>${i}</th>`;
-    myRow  += `<td class="sc-cell my-row"  onclick="openNumModal(${i},'top')">${scores[i].top??0}</td>`;
-    oppRow += `<td class="sc-cell opp-row" onclick="openNumModal(${i},'bot')">${scores[i].bot??0}</td>`;
+    myRow  += `<td class="sc-cell my-row"><button class="sc-cell-btn" onclick="openNumModal(${i},'top')">${scores[i].top??0}</button></td>`;
+    oppRow += `<td class="sc-cell opp-row"><button class="sc-cell-btn" onclick="openNumModal(${i},'bot')">${scores[i].bot??0}</button></td>`;
   }
 
   const html = `
