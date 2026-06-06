@@ -40,7 +40,7 @@ select.sel.sel-pos{flex:0 0 80px;}
 .bat-row-innings{display:grid;grid-template-columns:repeat(9,1fr);gap:5px;}
 .inn-col{display:flex;flex-direction:column;align-items:center;gap:3px;}
 .inn-col-label{font-size:10px;color:var(--dimmer);font-weight:700;}
-.res-btn{width:100%;height:44px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--dimmer);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;font-family:'Noto Sans JP',sans-serif;padding:0;display:flex;align-items:center;justify-content:center;}
+.res-btn{width:100%;height:44px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--dimmer);font-size:10px;font-weight:700;cursor:pointer;transition:all .15s;font-family:'Noto Sans JP',sans-serif;padding:0;display:flex;align-items:center;justify-content:center;}
 .res-btn:active{transform:scale(.88);}
 .res-btn.hit{background:#2a0000;border-color:#e74c3c;color:#ff6b6b;}
 .res-btn.hr{background:#2a0000;border-color:#e74c3c;color:#ff6b6b;}
@@ -85,7 +85,7 @@ select.sel.sel-pos{flex:0 0 80px;}
 .sheet-title{font-size:11px;color:var(--dim);margin-bottom:2px;}
 .sheet-player{font-size:20px;font-weight:700;margin-bottom:14px;}
 .res-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px;}
-.ro{padding:16px 6px;border-radius:12px;border:1px solid var(--border);background:var(--surface2);text-align:center;cursor:pointer;transition:all .15s;}
+.ro{padding:20px 6px;border-radius:12px;border:1px solid var(--border);background:var(--surface2);text-align:center;cursor:pointer;transition:all .15s;}
 .ro:active{transform:scale(.93);}
 .ro .ri{font-size:26px;margin-bottom:4px;}
 .ro .rl{font-size:14px;font-weight:700;}
@@ -265,7 +265,7 @@ select.sel.sel-pos{flex:0 0 80px;}
   <div id="hdr-normal" style="display:flex;align-items:center;width:100%;gap:0;">
     <img src="logo.jpg" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;margin-right:8px;">
     <button class="hdr-nav-btn active" id="hnav-score" onclick="showScreen('score')">スコア入力</button>
-    <button class="hdr-nav-btn" id="hnav-archive" onclick="showScreen('archive')">成績</button>
+    <button class="hdr-nav-btn" id="hnav-archive" onclick="showScreen('archive')">通算成績</button>
   </div>
   <div id="hdr-scoreinput" style="display:none;align-items:center;width:100%;gap:8px;min-height:40px;">
     <div id="game-info-disp" style="flex:1;font-size:18px;font-weight:900;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
@@ -340,17 +340,17 @@ select.sel.sel-pos{flex:0 0 80px;}
     <div class="sheet-title" id="modal-sub"></div>
     <div class="sheet-player" id="modal-player"></div>
     <div class="res-grid">
-      <div class="ro ro-hit" onclick="pickRes('H')"><div class="ri">🟡</div><div class="rl">単打 H</div><div class="rs">ヒット</div></div>
-      <div class="ro ro-2b" onclick="pickRes('二塁打')"><div class="ri">🟨</div><div class="rl">二塁打 2B</div><div class="rs"></div></div>
-      <div class="ro ro-3b" onclick="pickRes('三塁打')"><div class="ri">💛</div><div class="rl">三塁打 3B</div><div class="rs"></div></div>
-      <div class="ro ro-hr" onclick="pickRes('本塁打')"><div class="ri">🔥</div><div class="rl">本塁打 HR</div><div class="rs">ホームラン</div></div>
-      <div class="ro ro-out" onclick="pickRes('凡打')"><div class="ri">❌</div><div class="rl">凡打</div><div class="rs">フライ/ゴロ</div></div>
-      <div class="ro ro-k" onclick="pickRes('三振')"><div class="ri">💨</div><div class="rl">三振 K</div><div class="rs"></div></div>
-      <div class="ro ro-bb" onclick="pickRes('四球')"><div class="ri">🔵</div><div class="rl">四球 BB</div><div class="rs"></div></div>
-      <div class="ro ro-hbp" onclick="pickRes('死球')"><div class="ri">🩹</div><div class="rl">死球 HBP</div><div class="rs"></div></div>
-      <div class="ro ro-bb" onclick="pickRes('犠打')"><div class="ri">🤝</div><div class="rl">犠打 SAC</div><div class="rs"></div></div>
-      <div class="ro ro-green" onclick="pickRes('盗塁')"><div class="ri">🏃</div><div class="rl">盗塁</div><div class="rs"></div></div>
-      <div class="ro ro-green" onclick="pickRes('暴投')"><div class="ri">💫</div><div class="rl">暴投</div><div class="rs"></div></div>
+      <div class="ro ro-hit" onclick="pickRes('H')"><div class="rl" style="font-size:22px;font-weight:900;">単打</div></div>
+      <div class="ro ro-2b" onclick="pickRes('二塁打')"><div class="rl" style="font-size:22px;font-weight:900;">二塁打</div></div>
+      <div class="ro ro-3b" onclick="pickRes('三塁打')"><div class="rl" style="font-size:22px;font-weight:900;">三塁打</div></div>
+      <div class="ro ro-hr" onclick="pickRes('本塁打')"><div class="rl" style="font-size:22px;font-weight:900;">本塁打</div></div>
+      <div class="ro ro-out" onclick="pickRes('凡打')"><div class="rl" style="font-size:22px;font-weight:900;">凡打</div></div>
+      <div class="ro ro-k" onclick="pickRes('三振')"><div class="rl" style="font-size:22px;font-weight:900;">三振</div></div>
+      <div class="ro ro-bb" onclick="pickRes('四球')"><div class="rl" style="font-size:22px;font-weight:900;">四球</div></div>
+      <div class="ro ro-hbp" onclick="pickRes('死球')"><div class="rl" style="font-size:22px;font-weight:900;">死球</div></div>
+      <div class="ro ro-bb" onclick="pickRes('犠打')"><div class="rl" style="font-size:22px;font-weight:900;">犠打</div></div>
+      <div class="ro ro-green" onclick="pickRes('盗塁')"><div class="rl" style="font-size:22px;font-weight:900;">盗塁</div></div>
+      <div class="ro ro-green" onclick="pickRes('暴投')"><div class="rl" style="font-size:22px;font-weight:900;">暴投</div></div>
     </div>
     <div class="detail-row"><label>詳細(任意)</label><input class="detail-inp" id="res-detail" type="text" placeholder="例: 左飛, 三ゴ"></div>
     <div class="rbi-row"><label>打点 (RBI)</label><div class="rbi-counter"><button class="rbi-btn" onclick="chgRbi(-1)">−</button><span class="rbi-num" id="rbi-disp">0</span><button class="rbi-btn" onclick="chgRbi(1)">＋</button></div></div>
@@ -782,7 +782,7 @@ function makeInnRow(half,orderKey,isPinch,pidx){
     const col=document.createElement('div');col.className='inn-col';
     const lbl=document.createElement('div');lbl.className='inn-col-label';lbl.textContent=i+'回';col.appendChild(lbl);
     if(abArr.length===0){const btn=document.createElement('button');btn.className='res-btn';btn.textContent='－';btn.style.color='var(--dimmer)';btn.onclick=(()=>{const _h=half,_k=orderKey,_ip=isPinch,_pi=pidx,_i=i;return()=>openModalEx(_h,_k,_ip,_pi,_i,0);})();col.appendChild(btn);}
-    else{abArr.forEach((res,ab)=>{const btn=document.createElement('button');btn.className='res-btn';const t=res.type;if(['H','二塁打','三塁打','本塁打'].includes(t))btn.classList.add('hit');else if(['凡打','三振'].includes(t))btn.classList.add('out');else if(['四球','死球','犠打'].includes(t))btn.classList.add('walk');else if(['盗塁','暴投'].includes(t))btn.classList.add('green');if(res.rbi>0)btn.classList.add('rbi-on');const lmap={'H':'H','二塁打':'2B','三塁打':'3B','本塁打':'HR','凡打':res.detail?res.detail.slice(0,2):'凡','三振':'K','四球':'BB','死球':'HBP','犠打':'犠','盗塁':'盗塁','暴投':'暴投'};btn.textContent=lmap[t]||t.slice(0,2);btn.onclick=(()=>{const _h=half,_k=orderKey,_ip=isPinch,_pi=pidx,_i=i,_ab=ab;return()=>openModalEx(_h,_k,_ip,_pi,_i,_ab);})();col.appendChild(btn);});
+    else{abArr.forEach((res,ab)=>{const btn=document.createElement('button');btn.className='res-btn';const t=res.type;if(['H','二塁打','三塁打','本塁打'].includes(t))btn.classList.add('hit');else if(['凡打','三振'].includes(t))btn.classList.add('out');else if(['四球','死球','犠打'].includes(t))btn.classList.add('walk');else if(['盗塁','暴投'].includes(t))btn.classList.add('green');if(res.rbi>0)btn.classList.add('rbi-on');const lmap={'H':'単打','二塁打':'二塁打','三塁打':'三塁打','本塁打':'本塁打','凡打':res.detail?res.detail.slice(0,2):'凡打','三振':'三振','四球':'四球','死球':'死球','犠打':'犠打','盗塁':'盗塁','暴投':'暴投'};btn.textContent=lmap[t]||t.slice(0,2);btn.onclick=(()=>{const _h=half,_k=orderKey,_ip=isPinch,_pi=pidx,_i=i,_ab=ab;return()=>openModalEx(_h,_k,_ip,_pi,_i,_ab);})();col.appendChild(btn);});
     // 2打席目以上は小さい＋ボタンを追加
     const addBtn=document.createElement('button');addBtn.className='res-btn';addBtn.textContent='＋';addBtn.style.cssText='color:var(--gold);border-color:var(--gold);';addBtn.onclick=(()=>{const _h=half,_k=orderKey,_ip=isPinch,_pi=pidx,_i=i,_ab=abArr.length;return()=>openModalEx(_h,_k,_ip,_pi,_i,_ab);})();col.appendChild(addBtn);}
     row.appendChild(col);
