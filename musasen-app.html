@@ -10,7 +10,7 @@
 :root{--bg:#2a2a2a;--surface:#363636;--surface2:#424242;--border:#555;--gold:#f0c040;--gold2:#d4a520;--gold-dim:rgba(240,192,64,.12);--red:#e74c3c;--rb:#ff6b5b;--green:#27ae60;--gb:#2ecc71;--blue:#3498db;--text:#f5f0e0;--dim:#b0a080;--dimmer:#706050;}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:16px;overscroll-behavior:none;}
-/* g-hdr moved to dynamic */
+.g-hdr{background:linear-gradient(135deg,#1a1a1a,#2a2a2a);padding:10px 14px;display:flex;align-items:center;position:sticky;top:0;z-index:200;}
 
 
 
@@ -749,7 +749,8 @@ function makeInnRow(half,orderKey,isPinch,pidx){
     const lbl=document.createElement('div');lbl.className='inn-col-label';lbl.textContent=i+'回';col.appendChild(lbl);
     if(abArr.length===0){const btn=document.createElement('button');btn.className='res-btn';btn.textContent='－';btn.style.color='var(--dimmer)';btn.onclick=(()=>{const _h=half,_k=orderKey,_ip=isPinch,_pi=pidx,_i=i;return()=>openModalEx(_h,_k,_ip,_pi,_i,0);})();col.appendChild(btn);}
     else{abArr.forEach((res,ab)=>{const btn=document.createElement('button');btn.className='res-btn';const t=res.type;if(['H','二塁打','三塁打'].includes(t))btn.classList.add('hit');else if(t==='本塁打')btn.classList.add('hr');else if(['凡打','三振'].includes(t))btn.classList.add('out');else if(['四球','死球'].includes(t))btn.classList.add('walk');if(res.rbi>0)btn.classList.add('rbi-on');const lmap={'H':'H','二塁打':'2B','三塁打':'3B','本塁打':'HR','凡打':res.detail?res.detail.slice(0,2):'凡','三振':'K','四球':'BB','死球':'HBP','犠打':'犠','盗塁':'SB','暴投':'WP'};btn.textContent=lmap[t]||t.slice(0,2);btn.onclick=(()=>{const _h=half,_k=orderKey,_ip=isPinch,_pi=pidx,_i=i,_ab=ab;return()=>openModalEx(_h,_k,_ip,_pi,_i,_ab);})();col.appendChild(btn);});
-    const addBtn=document.createElement('button');addBtn.className='res-btn';addBtn.textContent='＋';addBtn.style.cssText='color:var(--gold);border-color:var(--gold);';addBtn.onclick=(()=>{const _h=half,_k=orderKey,_ip=isPinch,_pi=pidx,_i=i,_ab=abArr.length;return()=>openModalEx(_h,_k,_ip,_pi,_i,_ab);})();col.appendChild(addBtn);}
+    // 2打席目以上は小さい＋ボタンを追加
+    const addBtn=document.createElement('button');addBtn.className='res-btn';addBtn.textContent='＋';addBtn.style.cssText='color:var(--gold);border-color:var(--gold);font-size:11px;height:28px;';addBtn.onclick=(()=>{const _h=half,_k=orderKey,_ip=isPinch,_pi=pidx,_i=i,_ab=abArr.length;return()=>openModalEx(_h,_k,_ip,_pi,_i,_ab);})();col.appendChild(addBtn);}
     row.appendChild(col);
   }
   return row;
