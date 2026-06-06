@@ -1447,29 +1447,45 @@ let agentSelectedPlayer = '';
 let agentIsTyping = false;
 let MUSACHEN_API_KEY = localStorage.getItem('musachen_api_key') || '';
 
+// SupabaseからAPIキーを取得・保存
+async function loadApiKeyFromSupabase() {
+  try {
+    const { data } = await sb.from('agent_config').select('value').eq('key', 'api_key').single();
+    if (data && data.value) {
+      MUSACHEN_API_KEY = data.value;
+      localStorage.setItem('musachen_api_key', data.value);
+      return true;
+    }
+  } catch(e) {}
+  return false;
+}
+
+async function saveApiKeyToSupabase(key) {
+  try {
+    await sb.from('agent_config').upsert({ key: 'api_key', value: key });
+  } catch(e) { console.warn('saveApiKeyToSupabase error', e); }
+}
+
 function openAgent() {
   document.getElementById('agent-window').classList.add('open');
   populateAgentPlayerSelect();
   subscribeAgentChat();
 
   if (agentMessages.length === 0) {
-    if (!MUSACHEN_API_KEY) {
-      // 履歴ロード後にAPIキー未設定なら入力欄を出す
-      fetchLiveGamesForAgent().then(() => {
-        loadAgentHistory().then(() => {
-          if (agentMessages.length === 0) showApiKeyPrompt();
-        });
-      });
-    } else {
-      fetchLiveGamesForAgent().then(() => {
-        loadAgentHistory().then(() => {
-          // 履歴が空のときだけウェルカムメッセージ
-          if (agentMessages.length === 0) {
-            setTimeout(() => addAgentMsg('bot', getWelcomeMsg()), 400);
-          }
-        });
-      });
-    }
+    fetchLiveGamesForAgent().then(async () => {
+      // まずSupabaseからAPIキーを取得試みる
+      if (!MUSACHEN_API_KEY) {
+        await loadApiKeyFromSupabase();
+      }
+      await loadAgentHistory();
+      if (agentMessages.length === 0) {
+        if (!MUSACHEN_API_KEY) {
+          showApiKeyPrompt();
+        } else {
+          setTimeout(() => addAgentMsg('bot', getWelcomeMsg()), 400);
+        }
+      }
+    });
   }
   scrollAgentToBottom();
 }
@@ -1502,7 +1518,7 @@ function showApiKeyPrompt() {
   scrollAgentToBottom();
 }
 
-function saveApiKey() {
+async function saveApiKey() {
   const key = document.getElementById('apikey-input').value.trim();
   if (!key.startsWith('sk-ant-')) {
     alert('正しいAPIキーを入力してください（sk-ant- で始まる文字列）');
@@ -1510,14 +1526,17 @@ function saveApiKey() {
   }
   MUSACHEN_API_KEY = key;
   localStorage.setItem('musachen_api_key', key);
+  // Supabaseにも保存して全端末で共有
+  await saveApiKeyToSupabase(key);
   const prompt = document.getElementById('apikey-prompt');
   if (prompt) prompt.remove();
   addAgentMsg('bot', getWelcomeMsg());
 }
 
-function resetApiKey() {
+async function resetApiKey() {
   localStorage.removeItem('musachen_api_key');
   MUSACHEN_API_KEY = '';
+  try { await sb.from('agent_config').delete().eq('key', 'api_key'); } catch(e) {}
   agentMessages = [];
   document.getElementById('agent-messages').innerHTML = '';
   showApiKeyPrompt();
