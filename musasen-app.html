@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>⚾ ムサセン ベースボールアプリ</title>
+<title>⚾ スコアブック</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -807,7 +807,7 @@ function openModalEx(half,order,isPinch,pidx,inning,atBat=0){
 }
 function closeModal(e){document.getElementById('res-modal').classList.remove('open');}
 
-// 相手攻撃データからムサセン投手成績を自動計算
+// 相手攻撃データから自チーム投手成績を自動計算
 // 投手担当イニング表示・入力UI
 function renderPitcherAssign(){
   const wrap = document.getElementById('pitcher-assign-wrap');
@@ -819,7 +819,7 @@ function renderPitcherAssign(){
   }
 
   let html = '<div style="padding:10px 12px;background:var(--surface);border-bottom:1px solid var(--border);">';
-  html += '<div class="p-sec" style="margin:0 0 10px;">ムサセン投手陣</div>';
+  html += '<div class="p-sec" style="margin:0 0 10px;">自チーム投手陣</div>';
 
   pitchers.my.forEach((p,idx)=>{
     const thirds=p.ip*3+p.ip3;
@@ -905,7 +905,7 @@ function calcPitcherFromBatting(){
       }
     });
   }
-  // 失点（相手の得点=ムサセンの失点）
+  // 失点（相手の得点=自チームの失点）
   let totalLost=0;
   for(let i=1;i<=INNINGS;i++) totalLost+=scores[i].bot||0;
 
@@ -990,7 +990,7 @@ function openSummary(){
   let html='<div class="s-sec">スコアボード</div><div style="overflow-x:auto"><table class="s-tbl"><thead><tr><th>チーム</th>';
   for(let i=1;i<=INNINGS;i++)html+=`<th>${i}</th>`;html+='<th>計</th></tr></thead><tbody>';
   let myT=0,oppT=0;
-  html+='<tr><td>ムサセン</td>';for(let i=1;i<=INNINGS;i++){const s=scores[i].top||0;myT+=s;html+=`<td>${s}</td>`;}html+=`<td><strong>${myT}</strong></td></tr>`;
+  html+='<tr><td>自チーム</td>';for(let i=1;i<=INNINGS;i++){const s=scores[i].top||0;myT+=s;html+=`<td>${s}</td>`;}html+=`<td><strong>${myT}</strong></td></tr>`;
   html+='<tr><td>相手</td>';for(let i=1;i<=INNINGS;i++){const s=scores[i].bot||0;oppT+=s;html+=`<td>${s}</td>`;}html+=`<td><strong>${oppT}</strong></td></tr>`;
   html+='</tbody></table></div>';
   html+='<div class="s-sec">打撃成績</div><div style="overflow-x:auto"><table class="s-tbl"><thead><tr><th>打順</th><th>選手</th><th>守備</th>';
@@ -1000,9 +1000,9 @@ function openSummary(){
   html+='<div class="s-sec">投手成績</div>';
   if(!pitchers.my.length)html+='<p style="color:var(--dim);font-size:11px;margin-bottom:10px;">投手タブでデータを入力してください</p>';
   else{html+='<div style="overflow-x:auto"><table class="s-tbl"><thead><tr><th>登板</th><th>選手</th><th>投球回</th><th>自責</th><th>失点</th><th>K</th><th>四球</th><th>死球</th><th>被安</th><th>被HR</th><th>暴投</th><th>勝敗</th></tr></thead><tbody>';pitchers.my.forEach((p,i)=>{html+=`<tr><td>${i+1}</td><td>${p.name}</td><td>${p.ip}回${p.ip3>0?' '+p.ip3+'/3':''}</td><td>${p.er}</td><td>${p.r}</td><td>${p.so}</td><td>${p.bb}</td><td>${p.hbp}</td><td>${p.h}</td><td>${p.hr}</td><td>${p.wp}</td><td>${p.result}</td></tr>`;});html+='</tbody></table></div>';}
-  let txt='【ムサセン打撃成績】\n';
+  let txt='【自チーム打撃成績】\n';
   for(let o=1;o<=ORDERS;o++){const b=batters.top[o];if(!b||!b.name)continue;let ab=0,h=0,rbi=0,cells=[];for(let i=1;i<=INNINGS;i++){const arr=b.results[i];if(!arr)continue;(Array.isArray(arr)?arr:[arr]).forEach(r=>{if(!['四球','死球','犠打'].includes(r.type))ab++;if(['H','二塁打','三塁打','本塁打'].includes(r.type))h++;rbi+=r.rbi||0;cells.push(r.detail||r.type);});}txt+=`${o}番 ${b.name} ${b.pos||''} | ${cells.join(' ')} | ${ab}打数${h}安打 打点${rbi}\n`;}
-  txt+='\n【ムサセン投手成績】\n';pitchers.my.forEach((p,i)=>{txt+=`${i+1}番手 ${p.name} ${p.ip}回${p.ip3>0?p.ip3+'/3':''} 自責${p.er} 失${p.r} K${p.so} 四${p.bb} 死${p.hbp} 被安${p.h} ${p.result}\n`;});
+  txt+='\n【自チーム投手成績】\n';pitchers.my.forEach((p,i)=>{txt+=`${i+1}番手 ${p.name} ${p.ip}回${p.ip3>0?p.ip3+'/3':''} 自責${p.er} 失${p.r} K${p.so} 四${p.bb} 死${p.hbp} 被安${p.h} ${p.result}\n`;});
   html+=`<div class="s-sec">コピー用テキスト</div><div class="copy-wrap"><div class="copy-box" id="copy-all">${txt}</div><button class="btn-copy" onclick="copyText('copy-all')">📋<br>コピー</button></div>`;
   document.getElementById('sum-content').innerHTML=html;
   document.getElementById('sum-modal').classList.add('open');
@@ -1065,7 +1065,7 @@ function renderResults(){
     if(g.year!==curYear){curYear=g.year;const yg=GAME_RESULTS.filter(r=>r.year===curYear);const wins=yg.filter(r=>r.result==='勝').length;const loses=yg.filter(r=>r.result==='負').length;html+=`<div class="game-season-header">${curYear}年シーズン</div><div class="season-summary"><div class="ss-item"><div class="ss-val" style="color:var(--gold);">${wins}</div><div class="ss-lbl">勝利</div></div><div class="ss-item"><div class="ss-val" style="color:var(--rb);">${loses}</div><div class="ss-lbl">敗北</div></div><div class="ss-item"><div class="ss-val">${wins+loses}</div><div class="ss-lbl">試合</div></div><div class="ss-item"><div class="ss-val" style="color:${wins>loses?'var(--gold)':'var(--rb)'};">${Math.round(wins/(wins+loses)*100)}%</div><div class="ss-lbl">勝率</div></div></div>`;}
     const isWin=g.result==='勝';const oi=getTeamInitial(g.opp);
     html+=`<div class="game-card ${isWin?'win':'lose'}"><div class="game-meta"><div class="game-date">📅 ${g.date.replace(/\//g,'.')}</div><div class="game-round">第${g.round}回戦</div></div>
-    <div class="game-row"><div class="game-team"><div class="game-team-logo my-logo">M</div><div class="game-team-name my-name">ムサセン</div></div>
+    <div class="game-row"><div class="game-team"><div class="game-team-logo my-logo">M</div><div class="game-team-name my-name">自チーム</div></div>
     <div class="game-score-center"><div class="game-score-nums"><span class="score-my ${isWin?'win-score':'lose-score'}">${g.my}</span><span class="score-sep">-</span><span class="score-opp">${g.opp_score}</span></div><span class="game-result-badge ${isWin?'badge-win':'badge-lose'}">${isWin?'WIN':'LOSE'}</span></div>
     <div class="game-team"><div class="game-team-logo ${isWin?'win-logo':'lose-logo'}">${oi}</div><div class="game-team-name">${g.opp}</div></div></div>
     <div class="game-venue">📍 ${g.venue}</div></div>`;
@@ -1082,7 +1082,7 @@ let numTarget = {inning:null, half:null};
 function openNumModal(inning, half){
   numTarget = {inning, half};
   const cur = scores[inning][half] || 0;
-  const teamName = half==='top' ? 'ムサセン' : (currentGame?currentGame.opp:'相手');
+  const teamName = half==='top' ? '自チーム' : (currentGame?currentGame.opp:'相手');
   document.getElementById('num-title').textContent = inning + '回 ' + (half==='top'?'表':'裏') + '（' + teamName + '）';
   const grid = document.getElementById('num-grid');
   grid.innerHTML = [0,1,2,3,4,5,6,7,8,9,10].map(n =>
@@ -1129,7 +1129,7 @@ function renderScoreInput(){
     <div class="scoreboard-wrap">
       <div class="sb-header">
         <div></div>
-        <div class="sb-header-cell my">ムサセン</div>
+        <div class="sb-header-cell my">自チーム</div>
         <div class="sb-header-cell">${oppName}</div>
       </div>
       ${rows}
