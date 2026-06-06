@@ -441,9 +441,9 @@ function updateAutosaveTime(){
   const el=document.getElementById('autosave-indicator');
   if(!el||!lastSavedAt)return;
   const diff=Math.floor((new Date()-lastSavedAt)/1000);
-  if(diff<60) el.textContent='保存済み：たった今';
-  else if(diff<3600) el.textContent='保存済み：'+Math.floor(diff/60)+'分前';
-  else el.textContent='保存済み：'+Math.floor(diff/3600)+'時間前';
+  if(diff<60) el.textContent='自動保存中：たった今';
+  else if(diff<3600) el.textContent='自動保存中：'+Math.floor(diff/60)+'分前';
+  else el.textContent='自動保存中：'+Math.floor(diff/3600)+'時間前';
 }
 setInterval(()=>{if(lastSavedAt)updateAutosaveTime();},30000);
 function saveCurrentGame(){if(!currentGame)return;currentGame.batters=JSON.parse(JSON.stringify(batters));currentGame.scores=JSON.parse(JSON.stringify(scores));currentGame.pitchers=JSON.parse(JSON.stringify(pitchers));currentGame.pinchHitters=JSON.parse(JSON.stringify(pinchHitters||{top:{},bot:{}}));currentGame.orders=ORDERS;let my=0,opp=0;for(let i=1;i<=INNINGS;i++){my+=scores[i].top||0;opp+=scores[i].bot||0;}currentGame.finalScore={my,opp};saveGameToSupabase(currentGame);}
@@ -711,7 +711,6 @@ function openGame(gameId){
 }
 
 async function saveAndBack(){
-  // 保存完了を待ってからリスト取得
   if(currentGame){
     currentGame.batters=JSON.parse(JSON.stringify(batters));
     currentGame.scores=JSON.parse(JSON.stringify(scores));
@@ -727,6 +726,7 @@ async function saveAndBack(){
   currentGame=null;
   await loadGames();
   showScreen('score');
+  window.scrollTo({top:0,behavior:'instant'});
 }
 function tempSave(){ saveAndBack(); }
 
@@ -742,6 +742,7 @@ function confirmScore(){
   currentGame=null;
   loadGames();
   showScreen('score');
+  window.scrollTo({top:0,behavior:'instant'});
 }
 
 async function backToGameList(){
@@ -864,21 +865,21 @@ function renderPitcherAssign(){
     const ec=parseFloat(era)<3?'var(--gb)':parseFloat(era)<6?'var(--gold)':'var(--rb)';
     html += `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px;">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-        <select class="p-name-sel" onchange="pitchers.my[${idx}].name=this.value;scheduleSave()">${pitcherMemberOptions(p.name)}</select>
+        <select class="p-name-sel" style="padding:12px 8px;font-size:15px;border-radius:10px;" onchange="pitchers.my[${idx}].name=this.value;scheduleSave()">${pitcherMemberOptions(p.name)}</select>
         <span style="font-family:'Bebas Neue',cursive;font-size:14px;color:${ec};white-space:nowrap;">防 ${era}</span>
         ${pitchers.my.length>1?`<button class="btn-del" onclick="pitchers.my.splice(${idx},1);renderPitcherAssign()">✕</button>`:''}
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
         <span style="font-size:13px;color:var(--dim);">担当:</span>
-        <select style="background:var(--surface);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:13px;padding:6px;outline:none;" onchange="pitchers.my[${idx}].fromInning=parseInt(this.value);scheduleSave()">
+        <select style="background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:15px;padding:12px 8px;outline:none;" onchange="pitchers.my[${idx}].fromInning=parseInt(this.value);scheduleSave()">
           ${[1,2,3,4,5,6,7,8,9].map(n=>`<option value="${n}"${(p.fromInning||1)===n?' selected':''}>${n}回</option>`).join('')}
         </select>
         <span style="color:var(--dim);">〜</span>
-        <select style="background:var(--surface);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:13px;padding:6px;outline:none;" onchange="pitchers.my[${idx}].toInning=parseInt(this.value);updatePitcherIP(${idx});scheduleSave()">
+        <select style="background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:15px;padding:12px 8px;outline:none;" onchange="pitchers.my[${idx}].toInning=parseInt(this.value);updatePitcherIP(${idx});scheduleSave()">
           ${[1,2,3,4,5,6,7,8,9].map(n=>`<option value="${n}"${(p.toInning||9)===n?' selected':''}>${n}回</option>`).join('')}
         </select>
         <span style="font-size:13px;color:var(--dim);">勝敗:</span>
-        <select style="background:var(--surface);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:13px;padding:6px;outline:none;" onchange="pitchers.my[${idx}].result=this.value;scheduleSave()">
+        <select style="background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:15px;padding:12px 8px;outline:none;" onchange="pitchers.my[${idx}].result=this.value;scheduleSave()">
           <option value="-"${p.result==='-'?' selected':''}>－</option>
           <option value="勝ち"${p.result==='勝ち'?' selected':''}>勝ち</option>
           <option value="負け"${p.result==='負け'?' selected':''}>負け</option>
@@ -889,7 +890,7 @@ function renderPitcherAssign(){
     </div>`;
   });
 
-  html += `<button class="btn-add-p" onclick="pitchers.my.push({name:'',ip:0,ip3:0,er:0,r:0,so:0,bb:0,hbp:0,h:0,hr:0,wp:0,result:'-',fromInning:1,toInning:9});renderPitcherAssign()">＋ 投手を追加</button>`;
+  html += `<button class="btn-add-p" style="padding:16px;font-size:15px;" onclick="pitchers.my.push({name:'',ip:0,ip3:0,er:0,r:0,so:0,bb:0,hbp:0,h:0,hr:0,wp:0,result:'-',fromInning:1,toInning:9});renderPitcherAssign()">＋ 投手を追加</button>`;
   html += '</div>';
   wrap.innerHTML = html;
 
