@@ -352,6 +352,8 @@ select.sel.sel-pos{flex:0 0 80px;}
       <div class="ro ro-bb" onclick="pickRes('四球')"><div class="ri">🔵</div><div class="rl">四球 BB</div><div class="rs"></div></div>
       <div class="ro ro-hbp" onclick="pickRes('死球')"><div class="ri">🩹</div><div class="rl">死球 HBP</div><div class="rs"></div></div>
       <div class="ro ro-sac" onclick="pickRes('犠打')"><div class="ri">🤝</div><div class="rl">犠打 SAC</div><div class="rs"></div></div>
+      <div class="ro ro-sac" onclick="pickRes('盗塁')"><div class="ri">🏃</div><div class="rl">盗塁 SB</div><div class="rs"></div></div>
+      <div class="ro ro-sac" onclick="pickRes('暴投')"><div class="ri">💫</div><div class="rl">暴投 WP</div><div class="rs"></div></div>
     </div>
     <div class="detail-row"><label>詳細(任意)</label><input class="detail-inp" id="res-detail" type="text" placeholder="例: 左飛, 三ゴ"></div>
     <div class="rbi-row"><label>打点 (RBI)</label><div class="rbi-counter"><button class="rbi-btn" onclick="chgRbi(-1)">−</button><span class="rbi-num" id="rbi-disp">0</span><button class="rbi-btn" onclick="chgRbi(1)">＋</button></div></div>
@@ -744,7 +746,7 @@ function makeInnRow(half,orderKey,isPinch,pidx){
     const col=document.createElement('div');col.className='inn-col';
     const lbl=document.createElement('div');lbl.className='inn-col-label';lbl.textContent=i+'回';col.appendChild(lbl);
     if(abArr.length===0){const btn=document.createElement('button');btn.className='res-btn';btn.textContent='－';btn.style.color='var(--dimmer)';btn.onclick=(()=>{const _h=half,_k=orderKey,_ip=isPinch,_pi=pidx,_i=i;return()=>openModalEx(_h,_k,_ip,_pi,_i,0);})();col.appendChild(btn);}
-    else{abArr.forEach((res,ab)=>{const btn=document.createElement('button');btn.className='res-btn';const t=res.type;if(['H','二塁打','三塁打'].includes(t))btn.classList.add('hit');else if(t==='本塁打')btn.classList.add('hr');else if(['凡打','三振'].includes(t))btn.classList.add('out');else if(['四球','死球'].includes(t))btn.classList.add('walk');if(res.rbi>0)btn.classList.add('rbi-on');const lmap={'H':'H','二塁打':'2B','三塁打':'3B','本塁打':'HR','凡打':res.detail?res.detail.slice(0,2):'凡','三振':'K','四球':'BB','死球':'HBP','犠打':'犠'};btn.textContent=lmap[t]||t.slice(0,2);btn.onclick=(()=>{const _h=half,_k=orderKey,_ip=isPinch,_pi=pidx,_i=i,_ab=ab;return()=>openModalEx(_h,_k,_ip,_pi,_i,_ab);})();col.appendChild(btn);});
+    else{abArr.forEach((res,ab)=>{const btn=document.createElement('button');btn.className='res-btn';const t=res.type;if(['H','二塁打','三塁打'].includes(t))btn.classList.add('hit');else if(t==='本塁打')btn.classList.add('hr');else if(['凡打','三振'].includes(t))btn.classList.add('out');else if(['四球','死球'].includes(t))btn.classList.add('walk');if(res.rbi>0)btn.classList.add('rbi-on');const lmap={'H':'H','二塁打':'2B','三塁打':'3B','本塁打':'HR','凡打':res.detail?res.detail.slice(0,2):'凡','三振':'K','四球':'BB','死球':'HBP','犠打':'犠','盗塁':'SB','暴投':'WP'};btn.textContent=lmap[t]||t.slice(0,2);btn.onclick=(()=>{const _h=half,_k=orderKey,_ip=isPinch,_pi=pidx,_i=i,_ab=ab;return()=>openModalEx(_h,_k,_ip,_pi,_i,_ab);})();col.appendChild(btn);});
     const addBtn=document.createElement('button');addBtn.className='res-btn';addBtn.textContent='＋';addBtn.style.cssText='color:var(--gold);border-color:var(--gold);';addBtn.onclick=(()=>{const _h=half,_k=orderKey,_ip=isPinch,_pi=pidx,_i=i,_ab=abArr.length;return()=>openModalEx(_h,_k,_ip,_pi,_i,_ab);})();col.appendChild(addBtn);}
     row.appendChild(col);
   }
@@ -805,13 +807,67 @@ function openModalEx(half,order,isPinch,pidx,inning,atBat=0){
   document.getElementById('res-modal').classList.add('open');
 }
 function closeModal(e){document.getElementById('res-modal').classList.remove('open');}
+
+// 相手攻撃データからムサセン投手成績を自動計算
+function calcPitcherFromBatting(){
+  // 相手の打席結果を集計
+  let totalH=0,totalHR=0,totalBB=0,totalHBP=0,totalSO=0,totalWP=0,totalR=0;
+  for(let o=1;o<=ORDERS;o++){
+    const b=batters['bot'][o];
+    if(!b) continue;
+    for(let i=1;i<=INNINGS;i++){
+      const arr=b.results[i];
+      if(!arr) continue;
+      (Array.isArray(arr)?arr:[arr]).forEach(r=>{
+        if(['H','二塁打','三塁打','本塁打'].includes(r.type)) totalH++;
+        if(r.type==='本塁打') totalHR++;
+        if(r.type==='四球') totalBB++;
+        if(r.type==='死球') totalHBP++;
+        if(r.type==='三振') totalSO++;
+        if(r.type==='暴投') totalWP++;
+        totalR += r.rbi||0;
+      });
+    }
+    // 代打分
+    (pinchHitters['bot'][o]||[]).forEach(p=>{
+      for(let i=1;i<=INNINGS;i++){
+        const arr=p.results[i];
+        if(!arr) continue;
+        (Array.isArray(arr)?arr:[arr]).forEach(r=>{
+          if(['H','二塁打','三塁打','本塁打'].includes(r.type)) totalH++;
+          if(r.type==='本塁打') totalHR++;
+          if(r.type==='四球') totalBB++;
+          if(r.type==='死球') totalHBP++;
+          if(r.type==='三振') totalSO++;
+          if(r.type==='暴投') totalWP++;
+          totalR += r.rbi||0;
+        });
+      }
+    });
+  }
+  // 失点（相手の得点=ムサセンの失点）
+  let totalLost=0;
+  for(let i=1;i<=INNINGS;i++) totalLost+=scores[i].bot||0;
+
+  // ムサセン投手陣に反映（先発投手1人の場合は全部、複数の場合は合計のみ参考表示）
+  if(pitchers.my.length===1){
+    const p=pitchers.my[0];
+    p.h=totalH; p.hr=totalHR; p.bb=totalBB; p.hbp=totalHBP;
+    p.so=totalSO; p.wp=totalWP; p.r=totalLost; p.er=totalLost;
+    renderPitchers('my');
+  } else if(pitchers.my.length>1){
+    // 複数投手の場合は最後の投手に差分を入れない（手動入力を尊重）
+    renderPitchers('my');
+  }
+}
+
 function pickRes(type){
   const{half,order,isPinch,pinchIdx,inning,atBat}=mst;mst.type=type;
   const detail=document.getElementById('res-detail').value.trim();
   const src=isPinch?pinchHitters[half][order][pinchIdx]:batters[half][order];
   let arr=src.results[inning];if(!Array.isArray(arr))arr=arr?[arr]:[];
   arr[atBat]={type,detail,rbi:mst.rbi};src.results[inning]=arr;
-  recalcScore(half,inning);closeModal();renderBatters();updateScoreHeader();scheduleSave();
+  recalcScore(half,inning);closeModal();renderBatters();updateScoreHeader();if(half==='bot')calcPitcherFromBatting();scheduleSave();
 }
 function chgRbi(d){
   mst.rbi=Math.max(0,(mst.rbi||0)+d);document.getElementById('rbi-disp').textContent=mst.rbi;
@@ -822,7 +878,7 @@ function clearRes(){
   const src=isPinch?pinchHitters[half][order][pinchIdx]:batters[half][order];
   let arr=src.results[inning];
   if(Array.isArray(arr)){arr.splice(atBat,1);if(arr.length===0)delete src.results[inning];else src.results[inning]=arr;}else delete src.results[inning];
-  recalcScore(half,inning);closeModal();renderBatters();updateScoreHeader();scheduleSave();
+  recalcScore(half,inning);closeModal();renderBatters();updateScoreHeader();if(half==='bot')calcPitcherFromBatting();scheduleSave();
 }
 function recalcScore(half,inning){
   let t=0;
@@ -846,7 +902,25 @@ function renderPitchers(side){
     card.innerHTML=`<div class="p-card-hdr">${nf}<span class="era-chip ${ec}" style="margin-left:7px;">防 ${era}</span><button class="btn-del" onclick="removePitcher('${side}',${idx})">✕</button></div>
 <div class="p-grid"><div class="p-field"><label>投球回</label><div class="p-inn-row"><input type="number" min="0" max="9" value="${p.ip}" oninput="pitchers['${side}'][${idx}].ip=parseInt(this.value)||0;renderPitchers('${side}');scheduleSave()"><span>回</span><select onchange="pitchers['${side}'][${idx}].ip3=parseInt(this.value);renderPitchers('${side}');scheduleSave()"><option value="0"${p.ip3===0?' selected':''}>0</option><option value="1"${p.ip3===1?' selected':''}>1/3</option><option value="2"${p.ip3===2?' selected':''}>2/3</option></select></div></div>
 <div class="p-field"><label>勝敗</label><select onchange="pitchers['${side}'][${idx}].result=this.value;scheduleSave()"><option value="-"${p.result==='-'?' selected':''}>－</option><option value="勝ち"${p.result==='勝ち'?' selected':''}>勝ち</option><option value="負け"${p.result==='負け'?' selected':''}>負け</option><option value="セーブ"${p.result==='セーブ'?' selected':''}>セーブ</option><option value="ホールド"${p.result==='ホールド'?' selected':''}>ホールド</option></select></div></div>
-<div class="p-stats"><div class="p-si"><label>自責点</label><input type="number" min="0" value="${p.er}" oninput="pitchers['${side}'][${idx}].er=parseInt(this.value)||0;renderPitchers('${side}');scheduleSave()"></div><div class="p-si"><label>失点</label><input type="number" min="0" value="${p.r}" oninput="pitchers['${side}'][${idx}].r=parseInt(this.value)||0;scheduleSave()"></div><div class="p-si"><label>奪三振</label><input type="number" min="0" value="${p.so}" oninput="pitchers['${side}'][${idx}].so=parseInt(this.value)||0;scheduleSave()"></div><div class="p-si"><label>与四球</label><input type="number" min="0" value="${p.bb}" oninput="pitchers['${side}'][${idx}].bb=parseInt(this.value)||0;scheduleSave()"></div><div class="p-si"><label>与死球</label><input type="number" min="0" value="${p.hbp}" oninput="pitchers['${side}'][${idx}].hbp=parseInt(this.value)||0;scheduleSave()"></div><div class="p-si"><label>被安打</label><input type="number" min="0" value="${p.h}" oninput="pitchers['${side}'][${idx}].h=parseInt(this.value)||0;scheduleSave()"></div><div class="p-si"><label>被本塁打</label><input type="number" min="0" value="${p.hr}" oninput="pitchers['${side}'][${idx}].hr=parseInt(this.value)||0;scheduleSave()"></div><div class="p-si"><label>暴投</label><input type="number" min="0" value="${p.wp}" oninput="pitchers['${side}'][${idx}].wp=parseInt(this.value)||0;scheduleSave()"></div></div>`;
+${side==='my'?`<div class="p-stats">
+  <div class="p-si"><label>自責点</label><input type="number" readonly style="opacity:.6;background:var(--bg);" value="${p.er}"></div>
+  <div class="p-si"><label>失点</label><input type="number" readonly style="opacity:.6;background:var(--bg);" value="${p.r}"></div>
+  <div class="p-si"><label>奪三振</label><input type="number" readonly style="opacity:.6;background:var(--bg);" value="${p.so}"></div>
+  <div class="p-si"><label>与四球</label><input type="number" readonly style="opacity:.6;background:var(--bg);" value="${p.bb}"></div>
+  <div class="p-si"><label>与死球</label><input type="number" readonly style="opacity:.6;background:var(--bg);" value="${p.hbp}"></div>
+  <div class="p-si"><label>被安打</label><input type="number" readonly style="opacity:.6;background:var(--bg);" value="${p.h}"></div>
+  <div class="p-si"><label>被本塁打</label><input type="number" readonly style="opacity:.6;background:var(--bg);" value="${p.hr}"></div>
+  <div class="p-si"><label>暴投</label><input type="number" readonly style="opacity:.6;background:var(--bg);" value="${p.wp}"></div>
+</div>`:`<div class="p-stats">
+  <div class="p-si"><label>自責点</label><input type="number" min="0" value="${p.er}" oninput="pitchers['${side}'][${idx}].er=parseInt(this.value)||0;renderPitchers('${side}');scheduleSave()"></div>
+  <div class="p-si"><label>失点</label><input type="number" min="0" value="${p.r}" oninput="pitchers['${side}'][${idx}].r=parseInt(this.value)||0;scheduleSave()"></div>
+  <div class="p-si"><label>奪三振</label><input type="number" min="0" value="${p.so}" oninput="pitchers['${side}'][${idx}].so=parseInt(this.value)||0;scheduleSave()"></div>
+  <div class="p-si"><label>与四球</label><input type="number" min="0" value="${p.bb}" oninput="pitchers['${side}'][${idx}].bb=parseInt(this.value)||0;scheduleSave()"></div>
+  <div class="p-si"><label>与死球</label><input type="number" min="0" value="${p.hbp}" oninput="pitchers['${side}'][${idx}].hbp=parseInt(this.value)||0;scheduleSave()"></div>
+  <div class="p-si"><label>被安打</label><input type="number" min="0" value="${p.h}" oninput="pitchers['${side}'][${idx}].h=parseInt(this.value)||0;scheduleSave()"></div>
+  <div class="p-si"><label>被本塁打</label><input type="number" min="0" value="${p.hr}" oninput="pitchers['${side}'][${idx}].hr=parseInt(this.value)||0;scheduleSave()"></div>
+  <div class="p-si"><label>暴投</label><input type="number" min="0" value="${p.wp}" oninput="pitchers['${side}'][${idx}].wp=parseInt(this.value)||0;scheduleSave()"></div>
+</div>`}`;
     cont.appendChild(card);
   });
 }
