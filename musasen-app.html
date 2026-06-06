@@ -1396,22 +1396,25 @@ function showArcMode(name){
 <!-- ===== AI AGENT ===== -->
 <!-- フローティングボタン -->
 <button class="agent-fab" onclick="openAgent()" id="agent-fab">
-  📊
-  <span class="agent-fab-label">ANALYST</span>
+  <img src="logo.jpg" style="width:46px;height:46px;border-radius:50%;object-fit:cover;">
+  <span class="agent-fab-label">ムサチェン</span>
 </button>
 
 <!-- エージェントウィンドウ -->
 <div class="agent-window" id="agent-window">
   <div class="agent-header">
-    <div class="agent-avatar">📊</div>
+    <div class="agent-avatar" style="background:none;padding:0;overflow:hidden;">
+      <img src="logo.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;">
+    </div>
     <div class="agent-header-info">
-      <div class="agent-header-name">DATA ANALYST</div>
+      <div class="agent-header-name">ムサチェン</div>
       <div class="agent-header-status">
         <span class="agent-status-dot"></span>
         チームアナリスト・常時分析中
       </div>
     </div>
     <button class="agent-close" onclick="closeAgent()">✕ 閉じる</button>
+    <button onclick="resetApiKey()" title="APIキーを再設定" style="background:var(--surface2);border:1px solid var(--border);color:var(--dim);border-radius:8px;padding:8px 10px;font-size:14px;cursor:pointer;margin-left:4px;">🔑</button>
   </div>
 
   <div class="agent-player-select">
@@ -1442,18 +1445,68 @@ function showArcMode(name){
 let agentMessages = [];
 let agentSelectedPlayer = '';
 let agentIsTyping = false;
+let MUSACHEN_API_KEY = localStorage.getItem('musachen_api_key') || '';
 
 function openAgent() {
   document.getElementById('agent-window').classList.add('open');
   populateAgentPlayerSelect();
   if (agentMessages.length === 0) {
-    setTimeout(() => addAgentMsg('bot', getWelcomeMsg()), 400);
+    if (!MUSACHEN_API_KEY) {
+      setTimeout(() => showApiKeyPrompt(), 300);
+    } else {
+      setTimeout(() => addAgentMsg('bot', getWelcomeMsg()), 400);
+    }
   }
   scrollAgentToBottom();
 }
 
 function closeAgent() {
   document.getElementById('agent-window').classList.remove('open');
+}
+
+function showApiKeyPrompt() {
+  const el = document.getElementById('agent-messages');
+  const div = document.createElement('div');
+  div.id = 'apikey-prompt';
+  div.style.cssText = 'background:var(--surface);border:1px solid rgba(240,192,64,.4);border-radius:16px;padding:18px;margin:8px 0;';
+  div.innerHTML = `
+    <div style="font-size:15px;font-weight:900;color:var(--gold);margin-bottom:8px;">🔑 APIキーの設定</div>
+    <div style="font-size:13px;color:var(--dim);margin-bottom:12px;line-height:1.6;">
+      ムサチェンを使うには Anthropic API キーが必要です。<br>
+      キーは端末にのみ保存され、他には送信されません。
+    </div>
+    <div style="font-size:12px;color:var(--dimmer);margin-bottom:10px;">
+      取得先: <a href="https://console.anthropic.com/keys" target="_blank" style="color:var(--gold);">console.anthropic.com/keys</a>
+    </div>
+    <input id="apikey-input" type="password" placeholder="sk-ant-..." 
+      style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;padding:10px 12px;outline:none;font-family:'Noto Sans JP',sans-serif;margin-bottom:10px;">
+    <button onclick="saveApiKey()" style="width:100%;padding:12px;background:var(--gold);border:none;color:#1a1a1a;font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:900;border-radius:10px;cursor:pointer;">
+      設定して起動 ▶
+    </button>
+  `;
+  el.appendChild(div);
+  scrollAgentToBottom();
+}
+
+function saveApiKey() {
+  const key = document.getElementById('apikey-input').value.trim();
+  if (!key.startsWith('sk-ant-')) {
+    alert('正しいAPIキーを入力してください（sk-ant- で始まる文字列）');
+    return;
+  }
+  MUSACHEN_API_KEY = key;
+  localStorage.setItem('musachen_api_key', key);
+  const prompt = document.getElementById('apikey-prompt');
+  if (prompt) prompt.remove();
+  addAgentMsg('bot', getWelcomeMsg());
+}
+
+function resetApiKey() {
+  localStorage.removeItem('musachen_api_key');
+  MUSACHEN_API_KEY = '';
+  agentMessages = [];
+  document.getElementById('agent-messages').innerHTML = '';
+  showApiKeyPrompt();
 }
 
 function populateAgentPlayerSelect() {
@@ -1502,7 +1555,7 @@ function getWelcomeMsg() {
   const ty = TEAM_YEARS.find(t => t.year === latestYear);
   const wins = ty ? ty.w : '?';
   const losses = ty ? ty.l : '?';
-  return `データ分析担当、起動しました。📊\n\n${latestYear}シーズン現在、チームは<span class="stat-chip">${wins}勝${losses}敗</span>。成績データをすべて把握しています。\n\n選手個人の分析や練習アドバイス、チーム状況のコメントなど、何でも聞いてください。上のセレクトボックスで選手を選ぶと個人に特化した分析もできますよ。`;
+  return `ムサチェンです。データ分析、始めます。📊\n\n${latestYear}シーズン現在、チームは<span class="stat-chip">${wins}勝${losses}敗</span>。選手全員の成績データを把握しています。\n\n個人の成績分析、練習アドバイス、チーム状況のコメントなど、何でも聞いてください。上の選手選択で個人特化モードにもなりますよ。`;
 }
 
 function sendQuick(text) {
@@ -1515,7 +1568,7 @@ function addAgentMsg(role, text) {
   const el = document.getElementById('agent-messages');
   const div = document.createElement('div');
   div.className = 'agent-msg ' + role;
-  const avatarIcon = role === 'bot' ? '📊' : '👤';
+  const avatarIcon = role === 'bot' ? `<img src="logo.jpg" style="width:34px;height:34px;border-radius:50%;object-fit:cover;">` : '👤';
   div.innerHTML = `
     <div class="agent-msg-avatar">${avatarIcon}</div>
     <div class="agent-bubble">${text}</div>
@@ -1530,7 +1583,9 @@ function showTypingIndicator() {
   div.className = 'agent-typing-wrap';
   div.id = 'agent-typing';
   div.innerHTML = `
-    <div class="agent-msg-avatar">📊</div>
+    <div class="agent-msg-avatar" style="background:none;padding:0;overflow:hidden;">
+      <img src="logo.jpg" style="width:34px;height:34px;border-radius:50%;object-fit:cover;">
+    </div>
     <div class="agent-typing-dots"><span></span><span></span><span></span></div>
   `;
   el.appendChild(div);
@@ -1559,7 +1614,6 @@ async function sendAgentMsg() {
 
   try {
     const systemPrompt = buildAgentSystemPrompt();
-    // Build conversation history for API
     const apiMessages = agentMessages.slice(-12).map(m => ({
       role: m.role === 'bot' ? 'assistant' : 'user',
       content: m.role === 'bot' ? m.text.replace(/<[^>]+>/g, '') : m.text
@@ -1567,7 +1621,12 @@ async function sendAgentMsg() {
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': MUSACHEN_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1000,
@@ -1576,6 +1635,18 @@ async function sendAgentMsg() {
       })
     });
     const data = await res.json();
+    if (data.error) {
+      removeTypingIndicator();
+      if (data.error.type === 'authentication_error') {
+        addAgentMsg('bot', '⚠️ APIキーが無効です。右上の「🔑」ボタンから再設定してください。');
+        MUSACHEN_API_KEY = '';
+        localStorage.removeItem('musachen_api_key');
+      } else {
+        addAgentMsg('bot', `エラー: ${data.error.message}`);
+      }
+      agentIsTyping = false;
+      return;
+    }
     const reply = data.content?.[0]?.text || 'データを解析できませんでした。';
     removeTypingIndicator();
     addAgentMsg('bot', formatAgentReply(reply));
@@ -1629,14 +1700,16 @@ function buildAgentSystemPrompt() {
   // Recent game results
   const recentGames = [...GAME_RESULTS].reverse().slice(0, 6);
 
-  return `あなたは草野球チーム「ムサセン」の専属データアナリストです。チームの一員として、データに基づいた分析と具体的なアドバイスをします。
+  return `あなたは草野球チーム「ムサセン」の専属データアナリスト「ムサチェン」です。チームの一員として、データに基づいた分析と具体的なアドバイスをします。
 
 ## あなたのキャラクター
+- 名前は「ムサチェン」。チームのデータ番長として親しまれている
 - 冷静で論理的だが、チームへの熱い想いがある
 - 数字を根拠に語るが、感情的なサポートも忘れない
 - 専門的すぎず、草野球レベルに合わせた実践的アドバイスをする
 - 「データによると〜」「数字が示すのは〜」など分析的な口調を使う
 - 励ます時は具体的な数字を引用して励ます
+- 一人称は「ムサチェン」または「俺」
 
 ## チームデータ
 ### チーム年度別成績
