@@ -1434,8 +1434,7 @@ function showArcMode(name){
 
   <div class="agent-input-wrap">
     <textarea class="agent-input" id="agent-input" placeholder="質問や相談を入力..." rows="1"
-      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAgentMsg();}"
-      oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"></textarea>
+      onkeydown="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"></textarea>
     <button class="agent-send" onclick="sendAgentMsg()">➤</button>
   </div>
 </div>
