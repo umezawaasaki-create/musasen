@@ -127,10 +127,10 @@ select.sel.sel-pos{flex:0 0 80px;}
 .btn-send{width:100%;padding:13px;background:var(--gold2);border:none;color:#1a1a1a;font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:900;border-radius:11px;cursor:pointer;letter-spacing:1px;margin-top:8px;}
 /* アーカイブ */
 .arc-content{padding:10px 10px 20px;}
-.arc-mode-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.arc-mode-bar{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-bottom:12px;}.arc-mode-bar::-webkit-scrollbar{display:none;}
 .arc-mode-btn{padding:9px 16px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--dim);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;}
 .arc-mode-btn.active{background:var(--gold);color:#1a1a1a;border-color:var(--gold);}
-.year-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.year-bar{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-bottom:12px;padding-bottom:4px;}.year-bar::-webkit-scrollbar{display:none;}
 .yr-btn{padding:8px 16px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--dim);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;}
 .yr-btn.active{background:var(--gold);color:#1a1a1a !important;border-color:var(--gold);font-weight:900;}
 .yr-btn.all{border-color:var(--gold);color:var(--gold);}
@@ -184,7 +184,7 @@ select.sel.sel-pos{flex:0 0 80px;}
 .btn-ng-create{width:100%;padding:15px;background:var(--gold);border:none;color:#1a1a1a;font-family:'Noto Sans JP',sans-serif;font-size:16px;font-weight:900;border-radius:12px;cursor:pointer;margin-top:6px;}
 .btn-ng-cancel{width:100%;padding:13px;background:transparent;border:1px solid var(--border);color:var(--dim);font-family:'Noto Sans JP',sans-serif;font-size:15px;border-radius:12px;cursor:pointer;margin-top:8px;}
 /* 対戦結果 */
-.res-yr-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.res-yr-bar{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-bottom:14px;}.res-yr-bar::-webkit-scrollbar{display:none;}
 .res-yr-btn{padding:8px 16px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--dim);font-size:13px;font-weight:700;cursor:pointer;}
 .res-yr-btn.active{background:var(--gold);color:#1a1a1a !important;border-color:var(--gold);font-weight:900;}
 .game-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:10px;}
@@ -277,9 +277,9 @@ select.sel.sel-pos{flex:0 0 80px;}
 <!-- スコア入力 -->
 <div id="screen-scoreinput" class="screen">
   <div class="sub-tabs" style="justify-content:flex-start;gap:0;">
-    <div class="sub-tab" onclick="showSubTab('score')" style="flex:1;">🔢 点数</div>
-    <div class="sub-tab active" onclick="showSubTab('bat')" style="flex:1;">⚾ 打撃</div>
-    <div class="sub-tab" onclick="showSubTab('pit')" style="flex:1;">🎽 投手</div>
+    <div class="sub-tab" onclick="showSubTab('score')" style="flex:1;">点数</div>
+    <div class="sub-tab active" onclick="showSubTab('bat')" style="flex:1;">打撃</div>
+    <div class="sub-tab" onclick="showSubTab('pit')" style="flex:1;">投手</div>
   </div>
   <!-- 点数入力タブ -->
   <div id="subtab-score" style="display:none;">
@@ -312,9 +312,9 @@ select.sel.sel-pos{flex:0 0 80px;}
 <div id="screen-archive" class="screen">
   <div class="arc-content">
     <div class="arc-mode-bar">
-      <button class="arc-mode-btn active" id="arcbtn-ranking" onclick="showArcMode('ranking')">🏆 ランキング</button>
-      <button class="arc-mode-btn" id="arcbtn-team" onclick="showArcMode('team')">📊 チーム成績</button>
-      <button class="arc-mode-btn" id="arcbtn-results" onclick="showArcMode('results')">⚔️ 対戦結果</button>
+      <button class="arc-mode-btn active" id="arcbtn-ranking" onclick="showArcMode('ranking')">ランキング</button>
+      <button class="arc-mode-btn" id="arcbtn-team" onclick="showArcMode('team')">チーム成績</button>
+      <button class="arc-mode-btn" id="arcbtn-results" onclick="showArcMode('results')">対戦結果</button>
     </div>
     <div id="arc-ranking">
       <div class="rank-cat-bar" id="rank-cat-bar"></div>
@@ -646,9 +646,8 @@ function gameCard(g){
       <div style="font-size:11px;font-weight:700;color:${scoreColor};">${isWin?'WIN':'LOSE'}</div>`;
   }
   return`<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:14px;" onclick="openGame('${g.id}')">
-    <div style="width:52px;height:52px;border-radius:12px;background:var(--surface2);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;font-family:'Bebas Neue',cursive;color:var(--gold);flex-shrink:0;">${initial}</div>
-    <div style="flex:1;min-width:0;"><div style="font-size:17px;font-weight:700;margin-bottom:3px;">vs ${g.opp}</div><div style="font-size:12px;color:var(--dim);margin-bottom:3px;">📅 ${g.date}</div><div style="font-size:11px;color:var(--dimmer);">📍 ${g.venue}</div></div>
-    <div style="text-align:right;flex-shrink:0;min-width:60px;">${rightHtml}${g.updatedAt?`<div style="font-size:10px;color:var(--dimmer);margin-top:4px;">${formatUpdatedAt(g.updatedAt)}</div>`:''}</div>
+    <div style="flex:1;min-width:0;"><div style="font-size:17px;font-weight:700;margin-bottom:3px;">vs ${g.opp}</div><div style="font-size:12px;color:var(--dim);margin-bottom:3px;">${g.date}</div><div style="font-size:11px;color:var(--dimmer);">${g.venue}</div></div>
+    <div style="text-align:right;flex-shrink:0;min-width:60px;">${rightHtml}${g.updatedAt?`<div style="font-size:10px;color:var(--dimmer);margin-top:4px;">最終更新：${formatUpdatedAt(g.updatedAt)}</div>`:''}</div>
 
   </div>`;
 }
