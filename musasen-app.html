@@ -616,8 +616,8 @@ function renderGameList(){
 function gameCard(g){
   const initial=getTeamInitial(g.opp);
   let rightHtml='';
-  if(g.finalScore&&(g.finalScore.my||g.finalScore.opp)){
-    const isWin=g.matchResult==='勝'||(g.matchResult!=='負'&&g.matchResult!=='分'&&g.finalScore.my>g.finalScore.opp);
+  if(g.status==='done'&&g.finalScore){
+    const isWin=g.matchResult==='勝';
     const scoreColor=isWin?'var(--gold)':'var(--rb)';
     rightHtml=`<div style="font-family:'Bebas Neue',cursive;font-size:28px;color:${scoreColor};line-height:1;">${g.finalScore.my}-${g.finalScore.opp}</div>
       <div style="font-size:11px;font-weight:700;color:${scoreColor};">${isWin?'WIN':'LOSE'}</div>`;
