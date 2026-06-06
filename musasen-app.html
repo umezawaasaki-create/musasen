@@ -254,6 +254,9 @@ select.sel.sel-pos{flex:0 0 80px;}
 .g-hdr{background:linear-gradient(135deg,#1a1a1a,#2a2a2a);padding:10px 14px;display:flex;align-items:center;position:sticky;top:0;z-index:200;}
 .hdr-nav-btn{flex:1;padding:10px 8px;background:transparent;border:none;border-bottom:3px solid transparent;color:var(--dim);font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;}
 .hdr-nav-btn.active{color:var(--gold);border-bottom-color:var(--gold);}
+
+@keyframes slowblink{0%,100%{opacity:1}50%{opacity:.3}}
+.autosave-indicator{font-size:11px;color:#2ecc71;white-space:nowrap;flex-shrink:0;animation:slowblink 2.5s ease-in-out infinite;}
 </style>
 </head>
 <body>
@@ -265,8 +268,9 @@ select.sel.sel-pos{flex:0 0 80px;}
     <button class="hdr-nav-btn active" id="hnav-score" onclick="showScreen('score')">スコア入力</button>
     <button class="hdr-nav-btn" id="hnav-archive" onclick="showScreen('archive')">成績</button>
   </div>
-  <div id="hdr-scoreinput" style="display:none;align-items:center;width:100%;gap:10px;min-height:40px;">
-    <div id="game-info-disp" style="flex:1;font-size:20px;font-weight:900;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
+  <div id="hdr-scoreinput" style="display:none;align-items:center;width:100%;gap:8px;min-height:40px;">
+    <div id="game-info-disp" style="flex:1;font-size:18px;font-weight:900;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
+    <div class="autosave-indicator" id="autosave-indicator">自動保存中</div>
   </div>
   <div id="game-info-disp" style="display:none;"></div>
 </div>
@@ -416,7 +420,33 @@ async function saveGameToSupabase(g){
     showSync(false);
   }
 }
-function scheduleSave(){if(!currentGame)return;clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveCurrentGame(),1500);}
+function scheduleSave(){
+  if(!currentGame)return;
+  clearTimeout(saveTimer);
+  updateAutosaveIndicator();
+  saveTimer=setTimeout(()=>saveCurrentGame(),1500);
+}
+function updateAutosaveIndicator(){
+  const el=document.getElementById('autosave-indicator');
+  if(!el)return;
+  el.textContent='自動保存中';
+}
+function setAutosaveSaved(){
+  const el=document.getElementById('autosave-indicator');
+  if(!el)return;
+  lastSavedAt=new Date();
+  updateAutosaveTime();
+}
+let lastSavedAt=null;
+function updateAutosaveTime(){
+  const el=document.getElementById('autosave-indicator');
+  if(!el||!lastSavedAt)return;
+  const diff=Math.floor((new Date()-lastSavedAt)/1000);
+  if(diff<60) el.textContent='保存済み：たった今';
+  else if(diff<3600) el.textContent='保存済み：'+Math.floor(diff/60)+'分前';
+  else el.textContent='保存済み：'+Math.floor(diff/3600)+'時間前';
+}
+setInterval(()=>{if(lastSavedAt)updateAutosaveTime();},30000);
 function saveCurrentGame(){if(!currentGame)return;currentGame.batters=JSON.parse(JSON.stringify(batters));currentGame.scores=JSON.parse(JSON.stringify(scores));currentGame.pitchers=JSON.parse(JSON.stringify(pitchers));currentGame.pinchHitters=JSON.parse(JSON.stringify(pinchHitters||{top:{},bot:{}}));currentGame.orders=ORDERS;let my=0,opp=0;for(let i=1;i<=INNINGS;i++){my+=scores[i].top||0;opp+=scores[i].bot||0;}currentGame.finalScore={my,opp};saveGameToSupabase(currentGame);}
 function subscribeRealtime(){sb.channel('games-rt').on('postgres_changes',{event:'*',schema:'public',table:'games'},payload=>{if(!currentGame||(payload.new&&payload.new.id!==currentGame.id))loadGames();}).subscribe();}
 // MASTER DATA
