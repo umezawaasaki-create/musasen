@@ -10,18 +10,18 @@
 :root{--bg:#2a2a2a;--surface:#363636;--surface2:#424242;--border:#555;--gold:#f0c040;--gold2:#d4a520;--gold-dim:rgba(240,192,64,.12);--red:#e74c3c;--rb:#ff6b5b;--green:#27ae60;--gb:#2ecc71;--blue:#3498db;--text:#f5f0e0;--dim:#b0a080;--dimmer:#706050;}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:16px;overscroll-behavior:none;}
-.g-hdr{background:linear-gradient(135deg,#1a1a1a,#2a2a2a);border-bottom:2px solid var(--gold);padding:11px 14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
-.g-hdr-logo{font-family:'Bebas Neue',cursive;font-size:24px;letter-spacing:3px;color:var(--gold);}
-.g-hdr-sub{font-size:18px;font-weight:900;color:var(--text);margin-top:1px;}
-.g-hdr-score{text-align:center;}
-.g-score-num{font-family:'Bebas Neue',cursive;font-size:28px;letter-spacing:4px;line-height:1;}
-.g-score-inn{font-size:10px;color:var(--gold);font-weight:700;}
-.btn-summary{background:var(--gold);border:none;color:#1a1a1a;font-family:'Noto Sans JP',sans-serif;font-size:12px;font-weight:900;padding:9px 12px;border-radius:12px;cursor:pointer;line-height:1.4;}
-.main-nav{position:fixed;bottom:0;left:0;right:0;background:#1a1a1a;border-top:2px solid var(--gold);display:flex;z-index:190;}
-.mn-btn{flex:1;padding:9px 0 12px;background:none;border:none;color:var(--dim);font-size:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;font-family:'Noto Sans JP',sans-serif;transition:color .2s;}
-.mn-btn .ni{font-size:22px;}
-.mn-btn.active{color:var(--gold);}
-.screen{display:none;padding-bottom:70px;}
+/* g-hdr moved to dynamic */
+
+
+
+
+
+
+
+
+
+
+.screen{display:none;padding-bottom:20px;}
 .screen.active{display:block;}
 /* スコア入力 */
 .sub-tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:56px;z-index:150;}
@@ -249,19 +249,29 @@ select.sel.sel-pos{flex:0 0 80px;}
 .num-btn:active{transform:scale(.92);}
 .num-btn.selected{background:var(--gold);color:#1a1a1a;border-color:var(--gold);}
 .num-cancel{width:100%;padding:13px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--dim);font-size:15px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;}
+
+.g-hdr{background:linear-gradient(135deg,#1a1a1a,#2a2a2a);border-bottom:2px solid var(--gold);padding:10px 14px;display:flex;align-items:center;position:sticky;top:0;z-index:200;}
+.hdr-nav-btn{flex:1;padding:10px 8px;background:transparent;border:none;border-bottom:3px solid transparent;color:var(--dim);font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.hdr-nav-btn.active{color:var(--gold);border-bottom-color:var(--gold);}
 </style>
 </head>
 <body>
 <div id="sync-badge" style="display:none;position:fixed;top:70px;right:14px;background:#2ecc71;color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;z-index:250;">✅ 保存済み</div>
-<div class="g-hdr">
-  <div style="flex:1;min-width:0;">
-    <div class="g-hdr-logo">⚾ MUSASEN</div>
-    <div class="g-hdr-sub" id="game-info-disp">東京スカイツリーグ</div>
+<div class="g-hdr" id="main-hdr">
+  <!-- 通常ヘッダー：ロゴ＋ナビタブ -->
+  <div id="hdr-normal" style="display:flex;align-items:center;width:100%;gap:0;">
+    <img src="logo.jpg" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;margin-right:8px;">
+    <button class="hdr-nav-btn active" id="hnav-score" onclick="showScreen('score')">スコア入力</button>
+    <button class="hdr-nav-btn" id="hnav-archive" onclick="showScreen('archive')">成績アーカイブ</button>
   </div>
-  <!-- スコア入力中のみ表示 -->
-  <div id="scoreinput-actions" style="display:none;gap:6px;flex-shrink:0;">
-    <button onclick="saveAndBack()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:12px;font-weight:700;padding:8px 10px;border-radius:10px;cursor:pointer;white-space:nowrap;">保存して戻る</button>
-    <button onclick="confirmScore()" style="background:var(--gold);border:none;color:#1a1a1a;font-family:'Noto Sans JP',sans-serif;font-size:12px;font-weight:900;padding:8px 10px;border-radius:10px;cursor:pointer;white-space:nowrap;">スコア確定</button>
+  <!-- スコア入力中ヘッダー -->
+  <div id="hdr-scoreinput" style="display:none;align-items:center;width:100%;gap:8px;">
+    <img src="logo.jpg" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;">
+    <div id="game-info-disp" style="flex:1;font-size:16px;font-weight:900;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
+    <div style="display:flex;gap:6px;flex-shrink:0;">
+      <button onclick="saveAndBack()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:12px;font-weight:700;padding:8px 10px;border-radius:10px;cursor:pointer;white-space:nowrap;">保存して戻る</button>
+      <button onclick="confirmScore()" style="background:var(--gold);border:none;color:#1a1a1a;font-family:'Noto Sans JP',sans-serif;font-size:12px;font-weight:900;padding:8px 10px;border-radius:10px;cursor:pointer;white-space:nowrap;">スコア確定</button>
+    </div>
   </div>
 </div>
 <!-- 試合リスト -->
@@ -328,10 +338,7 @@ select.sel.sel-pos{flex:0 0 80px;}
     <div id="pm-content"></div>
   </div>
 </div>
-<div class="main-nav">
-  <button class="mn-btn active" id="nav-score" onclick="showScreen('score')"><span class="ni">✏️</span>スコア入力</button>
-  <button class="mn-btn" id="nav-archive" onclick="showScreen('archive')"><span class="ni">📊</span>成績アーカイブ</button>
-</div>
+
 <!-- 打撃結果モーダル -->
 <div class="overlay" id="res-modal" onclick="closeModal(event)">
   <div class="sheet" onclick="event.stopPropagation()">
@@ -588,11 +595,20 @@ window.addEventListener('DOMContentLoaded',async()=>{
 function showScreen(name){
   ['score','archive','scoreinput'].forEach(s=>{const el=document.getElementById('screen-'+s);if(el)el.classList.remove('active');});
   document.getElementById('screen-'+name).classList.add('active');
-  ['score','archive'].forEach(s=>{document.getElementById('nav-'+s).classList.toggle('active',s===name);});
-  // scoreinput中はナビ非表示
-  document.querySelector('.main-nav').style.display = name==='scoreinput' ? 'none' : 'flex';
-  const acts = document.getElementById('scoreinput-actions');
-  if(acts) acts.style.display = name==='scoreinput' ? 'flex' : 'none';
+  // ヘッダー切替
+  const hNormal=document.getElementById('hdr-normal');
+  const hScore=document.getElementById('hdr-scoreinput');
+  if(name==='scoreinput'){
+    if(hNormal)hNormal.style.display='none';
+    if(hScore)hScore.style.display='flex';
+  }else{
+    if(hNormal)hNormal.style.display='flex';
+    if(hScore)hScore.style.display='none';
+    // ナビタブのactive更新
+    document.querySelectorAll('.hdr-nav-btn').forEach(b=>b.classList.remove('active'));
+    const activeBtn=document.getElementById('hnav-'+name);
+    if(activeBtn)activeBtn.classList.add('active');
+  }
   if(name==='archive')renderRanking();
 }
 // GAME LIST
@@ -634,7 +650,7 @@ async function createGame(){
 function openGame(gameId){
   const g=games.find(x=>x.id===gameId);if(!g)return;
   currentGame=g;
-  document.getElementById('game-info-disp').textContent='vs '+g.opp;
+  const gid=document.getElementById('game-info-disp');if(gid)gid.textContent='vs '+g.opp;
   ORDERS=g.orders||9;
   if(g.batters){batters=JSON.parse(JSON.stringify(g.batters));pinchHitters=JSON.parse(JSON.stringify(g.pinchHitters||{top:{},bot:{}}));}
   else{['top','bot'].forEach(h=>{batters[h]={};for(let o=1;o<=ORDERS;o++)batters[h][o]={name:'',pos:'',results:{}};});pinchHitters={top:{},bot:{}};DEFAULT_LINEUP.forEach(d=>{const m=MEMBERS.find(x=>x.num===d.num);if(m){batters.top[d.o].name=m.name+'('+m.num+')';batters.top[d.o].pos=d.pos;}});}
@@ -649,7 +665,7 @@ function openGame(gameId){
 
 function saveAndBack(){
   saveCurrentGame();
-  document.getElementById('game-info-disp').textContent='東京スカイツリーグ';
+  const _gid=document.getElementById('game-info-disp');if(_gid)_gid.textContent='';
   currentGame=null;
   loadGames();
   showScreen('score');
@@ -664,7 +680,7 @@ function confirmScore(){
   currentGame.matchResult=my>opp?'勝':my<opp?'負':my===opp&&my>0?'分':null;
   currentGame.status='done';
   saveCurrentGame();
-  document.getElementById('game-info-disp').textContent='東京スカイツリーグ';
+  const _gid=document.getElementById('game-info-disp');if(_gid)_gid.textContent='';
   currentGame=null;
   loadGames();
   showScreen('score');
@@ -672,7 +688,7 @@ function confirmScore(){
 
 async function backToGameList(){
   saveCurrentGame();
-  document.getElementById('game-info-disp').textContent='東京スカイツリーグ';
+  const _gid=document.getElementById('game-info-disp');if(_gid)_gid.textContent='';
   currentGame=null;
   await loadGames();
   showScreen('score');
