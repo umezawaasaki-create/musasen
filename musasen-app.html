@@ -262,13 +262,9 @@ select.sel.sel-pos{flex:0 0 80px;}
   <div id="hdr-normal" style="display:flex;align-items:center;width:100%;gap:0;">
     <img src="logo.jpg" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;margin-right:8px;">
     <button class="hdr-nav-btn active" id="hnav-score" onclick="showScreen('score')">スコア入力</button>
-    <button class="hdr-nav-btn" id="hnav-archive" onclick="showScreen('archive')">成績アーカイブ</button>
+    <button class="hdr-nav-btn" id="hnav-archive" onclick="showScreen('archive')">成績</button>
   </div>
-  <!-- スコア入力中の追加エリア（ボタン類） -->
-  <div id="hdr-scoreinput" style="display:none;align-items:center;gap:6px;flex-shrink:0;">
-    <button onclick="saveAndBack()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:12px;font-weight:700;padding:8px 10px;border-radius:10px;cursor:pointer;white-space:nowrap;">保存して戻る</button>
-    <button onclick="confirmScore()" style="background:var(--gold);border:none;color:#1a1a1a;font-family:'Noto Sans JP',sans-serif;font-size:12px;font-weight:900;padding:8px 10px;border-radius:10px;cursor:pointer;white-space:nowrap;">スコア確定</button>
-  </div>
+  <div id="hdr-scoreinput" style="display:none;"></div>
   <div id="game-info-disp" style="display:none;"></div>
 </div>
 <!-- 試合リスト -->
@@ -305,6 +301,11 @@ select.sel.sel-pos{flex:0 0 80px;}
       <div id="opp-pitchers"></div>
       <button class="btn-add-p" onclick="addPitcher('opp')">＋ 投手を追加</button>
     </div>
+  </div>
+  <!-- 下部ボタン（全タブ共通） -->
+  <div style="padding:16px 14px 30px;display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--border);margin-top:10px;">
+    <button onclick="saveAndBack()" style="width:100%;padding:16px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:15px;font-weight:700;border-radius:14px;cursor:pointer;">一時保存して戻る</button>
+    <button onclick="confirmScore()" style="width:100%;padding:16px;background:var(--gold);border:none;color:#1a1a1a;font-family:'Noto Sans JP',sans-serif;font-size:15px;font-weight:900;border-radius:14px;cursor:pointer;">✅ スコア確定</button>
   </div>
 </div>
 <!-- アーカイブ -->
