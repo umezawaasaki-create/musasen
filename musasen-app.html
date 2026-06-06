@@ -416,7 +416,7 @@ async function saveGameToSupabase(g){
   }
 }
 function scheduleSave(){if(!currentGame)return;clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveCurrentGame(),1500);}
-function saveCurrentGame(){if(!currentGame)return;currentGame.batters=JSON.parse(JSON.stringify(batters));currentGame.scores=JSON.parse(JSON.stringify(scores));currentGame.pitchers=JSON.parse(JSON.stringify(pitchers));currentGame.pinchHitters=JSON.parse(JSON.stringify(pinchHitters||{top:{},bot:{}}));currentGame.orders=ORDERS;let my=0,opp=0;for(let i=1;i<=INNINGS;i++){my+=scores[i].top||0;opp+=scores[i].bot||0;}currentGame.finalScore={my,opp};currentGame.matchResult=my>opp?'勝':my<opp?'負':my===opp&&my>0?'分':null;if(currentGame.matchResult)currentGame.status='done';saveGameToSupabase(currentGame);}
+function saveCurrentGame(){if(!currentGame)return;currentGame.batters=JSON.parse(JSON.stringify(batters));currentGame.scores=JSON.parse(JSON.stringify(scores));currentGame.pitchers=JSON.parse(JSON.stringify(pitchers));currentGame.pinchHitters=JSON.parse(JSON.stringify(pinchHitters||{top:{},bot:{}}));currentGame.orders=ORDERS;let my=0,opp=0;for(let i=1;i<=INNINGS;i++){my+=scores[i].top||0;opp+=scores[i].bot||0;}currentGame.finalScore={my,opp};saveGameToSupabase(currentGame);}
 function subscribeRealtime(){sb.channel('games-rt').on('postgres_changes',{event:'*',schema:'public',table:'games'},payload=>{if(!currentGame||(payload.new&&payload.new.id!==currentGame.id))loadGames();}).subscribe();}
 // MASTER DATA
 const MEMBERS=[{num:1,name:'至'},{num:2,name:'大谷'},{num:3,name:'まつ'},{num:4,name:'古田'},{num:5,name:'田中'},{num:6,name:'太田'},{num:8,name:'伊藤'},{num:9,name:'うすい'},{num:10,name:'梅澤'},{num:11,name:'ソク'},{num:12,name:'前田'},{num:13,name:'安倍'},{num:14,name:'竹林'},{num:17,name:'難波'},{num:18,name:'青木'},{num:23,name:'しんぺい'},{num:24,name:'梶原'},{num:25,name:'笹野'},{num:31,name:'大住'},{num:44,name:'新江'},{num:45,name:'ガク'},{num:47,name:'すいみ～'},{num:55,name:'村野'},{num:66,name:'てつ'},{num:77,name:'貢司'},{num:99,name:'ケイタ'},{num:120,name:'たくま'}];
@@ -658,15 +658,12 @@ function tempSave(){ saveAndBack(); }
 
 function confirmScore(){
   if(!currentGame) return;
-  saveCurrentGame();
-  // 合計スコアで勝敗確定
   let my=0,opp=0;
   for(let i=1;i<=INNINGS;i++){my+=scores[i].top||0;opp+=scores[i].bot||0;}
   currentGame.finalScore={my,opp};
   currentGame.matchResult=my>opp?'勝':my<opp?'負':my===opp&&my>0?'分':null;
-  if(currentGame.matchResult) currentGame.status='done';
-  saveGameToSupabase(currentGame);
-  // 試合リストへ戻る
+  currentGame.status='done';
+  saveCurrentGame();
   document.getElementById('game-info-disp').textContent='東京スカイツリーグ';
   currentGame=null;
   loadGames();
@@ -743,7 +740,7 @@ function renderBatters(){
   const addBtn=document.createElement('button');
   addBtn.style.cssText='width:calc(100% - 20px);margin:6px 10px 10px;padding:14px;background:transparent;border:2px dashed var(--border);border-radius:14px;color:var(--dim);font-size:16px;font-weight:700;cursor:pointer;font-family:sans-serif;';
   addBtn.textContent='＋ 打者を追加（'+(ORDERS+1)+'番）';
-  addBtn.onclick=()=>{ORDERS++;['top','bot'].forEach(h=>{batters[h][ORDERS]={name:'',pos:'',results:{}};});renderBatters();};
+  addBtn.onclick=()=>{ORDERS++;batters[curHalf][ORDERS]={name:'',pos:'',results:{}};if(!batters[curHalf==='top'?'bot':'top'][ORDERS])batters[curHalf==='top'?'bot':'top'][ORDERS]={name:'',pos:'',results:{}};renderBatters();};
   cont.appendChild(addBtn);
 }
 function addPinchHitter(half,order){if(!pinchHitters[half][order])pinchHitters[half][order]=[];pinchHitters[half][order].push({name:'',pos:'',results:{}});renderBatters();}
@@ -838,7 +835,7 @@ function sendToSheets(){if(!GAS_URL){alert('GAS URLが設定されていませ�
 const RANK_CATS=[{key:'_pitcher',label:'投手',fmt:v=>v,unit:'',color:'normal-val',minAb:0},
   {key:'avg',label:'打率',fmt:v=>v.toFixed(3).replace('0.','.'),unit:'',color:'gold-val',minAb:5},{key:'games',label:'試合数',fmt:v=>v,unit:'試合',color:'normal-val',minAb:0},{key:'h',label:'安打',fmt:v=>v,unit:'本',color:'normal-val',minAb:0},{key:'d',label:'二塁打',fmt:v=>v,unit:'本',color:'normal-val',minAb:0},{key:'t',label:'三塁打',fmt:v=>v,unit:'本',color:'normal-val',minAb:0},{key:'hr',label:'本塁打',fmt:v=>v,unit:'本',color:'normal-val',minAb:0},{key:'rbi',label:'打点',fmt:v=>v,unit:'点',color:'normal-val',minAb:0},{key:'bb',label:'四球',fmt:v=>v,unit:'個',color:'normal-val',minAb:0},{key:'hbp',label:'死球',fmt:v=>v,unit:'個',color:'normal-val',minAb:0},{key:'so',label:'三振',fmt:v=>v,unit:'個',color:'normal-val',minAb:0},{key:'sb',label:'盗塁',fmt:v=>v,unit:'個',color:'normal-val',minAb:0},{key:'ops',label:'OPS',fmt:v=>v.toFixed(3),unit:'',color:'gold-val',minAb:5}];
 let rankCatIdx=0,rankYear='all';
-function initRanking(){const bar=document.getElementById('rank-cat-bar');if(!bar)return;bar.innerHTML='';RANK_CATS.forEach((c,i)=>{const b=document.createElement('button');b.className='rank-cat-btn'+(i===0?' active':'');b.textContent=c.label;b.onclick=()=>{rankCatIdx=i;document.querySelectorAll('.rank-cat-btn').forEach((btn,j)=>btn.classList.toggle('active',j===i));renderRanking();};bar.appendChild(b);});const ybar=document.getElementById('rank-year-bar');ybar.innerHTML='';const allBtn=document.createElement('button');allBtn.className='yr-btn all active';allBtn.textContent='全年度';allBtn.onclick=()=>setRankYear('all');ybar.appendChild(allBtn);ARC_YEARS.forEach(y=>{const b=document.createElement('button');b.className='yr-btn';b.textContent=y+'年';b.onclick=()=>setRankYear(y);ybar.appendChild(b);});}
+function initRanking(){const bar=document.getElementById('rank-cat-bar');if(!bar)return;bar.innerHTML='';RANK_CATS.forEach((c,i)=>{const b=document.createElement('button');b.className='rank-cat-btn'+(i===0?' active':'');b.textContent=c.label;b.onclick=()=>{rankCatIdx=i;document.querySelectorAll('.rank-cat-btn').forEach((btn,j)=>btn.classList.toggle('active',j===i));renderRanking();};bar.appendChild(b);});const ybar=document.getElementById('rank-year-bar');ybar.innerHTML='';const allBtn=document.createElement('button');allBtn.className='yr-btn all active';allBtn.textContent='全年度';allBtn.onclick=()=>setRankYear('all');ybar.appendChild(allBtn);[2026,2025,2024,2023].forEach(y=>{const b=document.createElement('button');b.className='yr-btn';b.textContent=y+'年';b.onclick=()=>setRankYear(y);ybar.appendChild(b);});}
 function setRankYear(y){rankYear=y;document.querySelectorAll('#rank-year-bar .yr-btn').forEach(b=>{b.classList.toggle('active',b.textContent===(y==='all'?'全年度':y+'年'));});renderRanking();}
 function renderRanking(){
   const cat=RANK_CATS[rankCatIdx];
@@ -961,6 +958,7 @@ function renderScoreInput(){
         <div class="sb-total-score my">${myTotal}</div>
         <div class="sb-total-score">${oppTotal}</div>
       </div>
+      <button onclick="confirmScore()" style="width:100%;margin-top:16px;padding:16px;background:var(--gold);border:none;color:#1a1a1a;font-family:'Noto Sans JP',sans-serif;font-size:16px;font-weight:900;border-radius:14px;cursor:pointer;">✅ スコア確定</button>
 
     </div>`;
 
