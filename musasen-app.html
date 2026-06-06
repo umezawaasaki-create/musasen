@@ -670,7 +670,14 @@ function renderGameList(){
   const el=document.getElementById('gamelist-all');
   if(!el) return;
   const sorted=[...games].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  el.innerHTML=sorted.length?sorted.map(g=>gameCard(g)).join(''):'<p style="color:var(--dimmer);font-size:14px;padding:10px 0;">試合がありません</p>';
+  const upcoming=sorted.filter(g=>g.status!=='done');
+  const done=sorted.filter(g=>g.status==='done');
+  let html='';
+  html+='<div style="font-size:12px;font-weight:700;color:var(--dim);letter-spacing:1px;padding:4px 2px 8px;">予定試合</div>';
+  html+=upcoming.length?upcoming.map(g=>gameCard(g)).join(''):'<p style="color:var(--dimmer);font-size:14px;padding:4px 0 12px;">予定されている試合はありません</p>';
+  html+='<div style="font-size:12px;font-weight:700;color:var(--dim);letter-spacing:1px;padding:16px 2px 8px;border-top:1px solid var(--border);margin-top:8px;">スコア確定</div>';
+  html+=done.length?done.map(g=>gameCard(g)).join(''):'<p style="color:var(--dimmer);font-size:14px;padding:4px 0;">確定済みの試合はありません</p>';
+  el.innerHTML=html;
 }
 function gameCard(g){
   const initial=getTeamInitial(g.opp);
