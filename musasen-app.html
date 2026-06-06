@@ -412,7 +412,7 @@ async function loadGames(){
 async function saveGameToSupabase(g){
   try {
     const{error}=await sb.from('games').upsert({id:g.id,opp:g.opp,date:g.date,venue:g.venue,status:g.status,orders:g.orders||9,scores:g.scores,batters:g.batters,pinch_hitters:g.pinchHitters,pitchers:g.pitchers,final_score:g.finalScore,match_result:g.matchResult||null,updated_at:new Date().toISOString()});
-    showSync(!error);
+    if(!error)setAutosaveSaved();
     if(error)console.error('save error:',error.message,error);
   } catch(e) {
     console.error('saveGameToSupabase exception:',e);
