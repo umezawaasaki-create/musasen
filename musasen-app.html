@@ -90,15 +90,16 @@ select.sel.sel-pos{flex:0 0 80px;}
 .ro .ri{font-size:26px;margin-bottom:4px;}
 .ro .rl{font-size:14px;font-weight:700;}
 .ro .rs{font-size:11px;color:var(--dim);}
-.ro-hit{border-color:var(--gold);background:#2a2000;}.ro-hit .rl{color:var(--gold);}
-.ro-2b{border-color:var(--gold);background:#2a2000;}.ro-2b .rl{color:var(--gold);}
-.ro-3b{border-color:var(--gold);background:#2a2000;}.ro-3b .rl{color:var(--gold);}
-.ro-hr{border-color:#ff8c00;background:#2a1400;}.ro-hr .rl{color:#ff8c00;}
-.ro-out{border-color:var(--red);background:#2e0c0c;}.ro-out .rl{color:var(--rb);}
-.ro-k{border-color:var(--red);background:#2e0c0c;}.ro-k .rl{color:var(--rb);}
-.ro-bb{border-color:var(--blue);background:#102030;}.ro-bb .rl{color:var(--blue);}
-.ro-hbp{border-color:var(--blue);background:#102030;}.ro-hbp .rl{color:var(--blue);}
-.ro-sac{border-color:var(--dim);background:#2a2a2a;}.ro-sac .rl{color:var(--dim);}
+.ro-hit{border-color:#e74c3c;background:#2a0000;}.ro-hit .rl{color:#ff6b6b;}
+.ro-2b{border-color:#e74c3c;background:#2a0000;}.ro-2b .rl{color:#ff6b6b;}
+.ro-3b{border-color:#e74c3c;background:#2a0000;}.ro-3b .rl{color:#ff6b6b;}
+.ro-hr{border-color:#e74c3c;background:#2a0000;}.ro-hr .rl{color:#ff6b6b;}
+.ro-out{border-color:#555;background:#2a2a2a;}.ro-out .rl{color:#888;}
+.ro-k{border-color:#555;background:#2a2a2a;}.ro-k .rl{color:#888;}
+.ro-bb{border-color:var(--blue);background:#001830;}.ro-bb .rl{color:var(--blue);}
+.ro-hbp{border-color:var(--blue);background:#001830;}.ro-hbp .rl{color:var(--blue);}
+.ro-sac{border-color:var(--blue);background:#001830;}.ro-sac .rl{color:var(--blue);}
+.ro-green{border-color:var(--gb);background:#002a10;}.ro-green .rl{color:var(--gb);}
 .detail-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
 .detail-row label{font-size:11px;color:var(--dim);white-space:nowrap;}
 .detail-inp{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:13px;padding:7px 10px;outline:none;font-family:'Noto Sans JP',sans-serif;}
@@ -344,9 +345,9 @@ select.sel.sel-pos{flex:0 0 80px;}
       <div class="ro ro-k" onclick="pickRes('三振')"><div class="ri">💨</div><div class="rl">三振 K</div><div class="rs"></div></div>
       <div class="ro ro-bb" onclick="pickRes('四球')"><div class="ri">🔵</div><div class="rl">四球 BB</div><div class="rs"></div></div>
       <div class="ro ro-hbp" onclick="pickRes('死球')"><div class="ri">🩹</div><div class="rl">死球 HBP</div><div class="rs"></div></div>
-      <div class="ro ro-sac" onclick="pickRes('犠打')"><div class="ri">🤝</div><div class="rl">犠打 SAC</div><div class="rs"></div></div>
-      <div class="ro ro-sac" onclick="pickRes('盗塁')"><div class="ri">🏃</div><div class="rl">盗塁 SB</div><div class="rs"></div></div>
-      <div class="ro ro-sac" onclick="pickRes('暴投')"><div class="ri">💫</div><div class="rl">暴投 WP</div><div class="rs"></div></div>
+      <div class="ro ro-bb" onclick="pickRes('犠打')"><div class="ri">🤝</div><div class="rl">犠打 SAC</div><div class="rs"></div></div>
+      <div class="ro ro-green" onclick="pickRes('盗塁')"><div class="ri">🏃</div><div class="rl">盗塁</div><div class="rs"></div></div>
+      <div class="ro ro-green" onclick="pickRes('暴投')"><div class="ri">💫</div><div class="rl">暴投</div><div class="rs"></div></div>
     </div>
     <div class="detail-row"><label>詳細(任意)</label><input class="detail-inp" id="res-detail" type="text" placeholder="例: 左飛, 三ゴ"></div>
     <div class="rbi-row"><label>打点 (RBI)</label><div class="rbi-counter"><button class="rbi-btn" onclick="chgRbi(-1)">−</button><span class="rbi-num" id="rbi-disp">0</span><button class="rbi-btn" onclick="chgRbi(1)">＋</button></div></div>
