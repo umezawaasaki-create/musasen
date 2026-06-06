@@ -610,8 +610,13 @@ function showScreen(name){
 
 function formatUpdatedAt(iso){
   if(!iso) return '';
-  // +00や+00:00をZに統一してUTCとして正しく解釈
-  const isoZ = iso.replace(/\+00(:00)?$/, 'Z');
+  // タイムゾーンなしの場合はUTCとして扱うためZを付加
+  let isoZ = iso;
+  if(!iso.endsWith('Z') && !iso.includes('+') && !iso.includes('-', 10)){
+    isoZ = iso.replace(' ', 'T') + 'Z';
+  } else {
+    isoZ = iso.replace(' ', 'T').replace(/\+00(:00)?$/, 'Z');
+  }
   const d = new Date(isoZ);
   const now = new Date();
   const diff = Math.floor((now - d) / 1000);
