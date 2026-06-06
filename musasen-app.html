@@ -1450,13 +1450,24 @@ let MUSACHEN_API_KEY = localStorage.getItem('musachen_api_key') || '';
 function openAgent() {
   document.getElementById('agent-window').classList.add('open');
   populateAgentPlayerSelect();
+  subscribeAgentChat();
+
   if (agentMessages.length === 0) {
     if (!MUSACHEN_API_KEY) {
-      setTimeout(() => showApiKeyPrompt(), 300);
-    } else {
-      // Supabaseデータを先に取得してからウェルカムメッセージを表示
+      // 履歴ロード後にAPIキー未設定なら入力欄を出す
       fetchLiveGamesForAgent().then(() => {
-        setTimeout(() => addAgentMsg('bot', getWelcomeMsg()), 400);
+        loadAgentHistory().then(() => {
+          if (agentMessages.length === 0) showApiKeyPrompt();
+        });
+      });
+    } else {
+      fetchLiveGamesForAgent().then(() => {
+        loadAgentHistory().then(() => {
+          // 履歴が空のときだけウェルカムメッセージ
+          if (agentMessages.length === 0) {
+            setTimeout(() => addAgentMsg('bot', getWelcomeMsg()), 400);
+          }
+        });
       });
     }
   }
@@ -1581,17 +1592,71 @@ function sendQuick(text) {
   sendAgentMsg();
 }
 
-function addAgentMsg(role, text) {
-  agentMessages.push({ role, text });
+// ---- チャット履歴：Supabase共有 ----
+let agentChatSubscription = null;
+let agentLastLoadedId = null; // 重複描画防止
+
+async function loadAgentHistory() {
+  try {
+    const { data, error } = await sb
+      .from('agent_chat')
+      .select('*')
+      .order('created_at', { ascending: true })
+      .limit(100);
+    if (error || !data) return;
+    const el = document.getElementById('agent-messages');
+    el.innerHTML = '';
+    agentMessages = [];
+    data.forEach(row => {
+      agentMessages.push({ role: row.role, text: row.content });
+      renderAgentMsgEl(row.role, row.content);
+    });
+    if (data.length > 0) agentLastLoadedId = data[data.length - 1].id;
+    scrollAgentToBottom();
+  } catch(e) { console.warn('loadAgentHistory error', e); }
+}
+
+function renderAgentMsgEl(role, text) {
   const el = document.getElementById('agent-messages');
   const div = document.createElement('div');
   div.className = 'agent-msg ' + role;
-  const avatarIcon = role === 'bot' ? `<img src="logo.jpg" style="width:34px;height:34px;border-radius:50%;object-fit:cover;">` : '👤';
+  const avatarIcon = role === 'bot'
+    ? `<img src="logo.jpg" style="width:34px;height:34px;border-radius:50%;object-fit:cover;">`
+    : '👤';
   div.innerHTML = `
     <div class="agent-msg-avatar">${avatarIcon}</div>
     <div class="agent-bubble">${text}</div>
   `;
   el.appendChild(div);
+}
+
+async function saveAgentMsg(role, text) {
+  try {
+    const { data, error } = await sb.from('agent_chat').insert({ role, content: text }).select('id').single();
+    if (data) agentLastLoadedId = data.id; // 自分が送ったメッセージのIDを記録→リアルタイム重複防止
+  } catch(e) { console.warn('saveAgentMsg error', e); }
+}
+
+function subscribeAgentChat() {
+  if (agentChatSubscription) return;
+  agentChatSubscription = sb
+    .channel('agent-chat-rt')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'agent_chat' }, payload => {
+      const row = payload.new;
+      // 自分がすでに描画したものは追加しない（直近のメッセージはsendAgentMsgで既に描画済）
+      if (row.id === agentLastLoadedId) return;
+      agentLastLoadedId = row.id;
+      agentMessages.push({ role: row.role, text: row.content });
+      renderAgentMsgEl(row.role, row.content);
+      scrollAgentToBottom();
+    })
+    .subscribe();
+}
+
+function addAgentMsg(role, text) {
+  agentMessages.push({ role, text });
+  renderAgentMsgEl(role, text);
+  saveAgentMsg(role, text);
   scrollAgentToBottom();
 }
 
