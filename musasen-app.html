@@ -250,7 +250,7 @@ select.sel.sel-pos{flex:0 0 80px;}
 .num-btn.selected{background:var(--gold);color:#1a1a1a;border-color:var(--gold);}
 .num-cancel{width:100%;padding:13px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--dim);font-size:15px;cursor:pointer;font-family:'Noto Sans JP',sans-serif;}
 
-.g-hdr{background:linear-gradient(135deg,#1a1a1a,#2a2a2a);border-bottom:2px solid var(--gold);padding:10px 14px;display:flex;align-items:center;position:sticky;top:0;z-index:200;}
+.g-hdr{background:linear-gradient(135deg,#1a1a1a,#2a2a2a);padding:10px 14px;display:flex;align-items:center;position:sticky;top:0;z-index:200;}
 .hdr-nav-btn{flex:1;padding:10px 8px;background:transparent;border:none;border-bottom:3px solid transparent;color:var(--dim);font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;}
 .hdr-nav-btn.active{color:var(--gold);border-bottom-color:var(--gold);}
 </style>
@@ -258,21 +258,18 @@ select.sel.sel-pos{flex:0 0 80px;}
 <body>
 <div id="sync-badge" style="display:none;position:fixed;top:70px;right:14px;background:#2ecc71;color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;z-index:250;">✅ 保存済み</div>
 <div class="g-hdr" id="main-hdr">
-  <!-- 通常ヘッダー：ロゴ＋ナビタブ -->
+  <!-- ヘッダー：常にナビタブ表示 -->
   <div id="hdr-normal" style="display:flex;align-items:center;width:100%;gap:0;">
-    <img src="logo.jpg" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;margin-right:8px;">
+    <img src="logo.jpg" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;margin-right:8px;">
     <button class="hdr-nav-btn active" id="hnav-score" onclick="showScreen('score')">スコア入力</button>
     <button class="hdr-nav-btn" id="hnav-archive" onclick="showScreen('archive')">成績アーカイブ</button>
   </div>
-  <!-- スコア入力中ヘッダー -->
-  <div id="hdr-scoreinput" style="display:none;align-items:center;width:100%;gap:8px;">
-    <img src="logo.jpg" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;">
-    <div id="game-info-disp" style="flex:1;font-size:16px;font-weight:900;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
-    <div style="display:flex;gap:6px;flex-shrink:0;">
-      <button onclick="saveAndBack()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:12px;font-weight:700;padding:8px 10px;border-radius:10px;cursor:pointer;white-space:nowrap;">保存して戻る</button>
-      <button onclick="confirmScore()" style="background:var(--gold);border:none;color:#1a1a1a;font-family:'Noto Sans JP',sans-serif;font-size:12px;font-weight:900;padding:8px 10px;border-radius:10px;cursor:pointer;white-space:nowrap;">スコア確定</button>
-    </div>
+  <!-- スコア入力中の追加エリア（ボタン類） -->
+  <div id="hdr-scoreinput" style="display:none;align-items:center;gap:6px;flex-shrink:0;">
+    <button onclick="saveAndBack()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:12px;font-weight:700;padding:8px 10px;border-radius:10px;cursor:pointer;white-space:nowrap;">保存して戻る</button>
+    <button onclick="confirmScore()" style="background:var(--gold);border:none;color:#1a1a1a;font-family:'Noto Sans JP',sans-serif;font-size:12px;font-weight:900;padding:8px 10px;border-radius:10px;cursor:pointer;white-space:nowrap;">スコア確定</button>
   </div>
+  <div id="game-info-disp" style="display:none;"></div>
 </div>
 <!-- 試合リスト -->
 <div id="screen-score" class="screen active">
@@ -595,20 +592,17 @@ window.addEventListener('DOMContentLoaded',async()=>{
 function showScreen(name){
   ['score','archive','scoreinput'].forEach(s=>{const el=document.getElementById('screen-'+s);if(el)el.classList.remove('active');});
   document.getElementById('screen-'+name).classList.add('active');
-  // ヘッダー切替
+  // ナビタブは常に表示・active更新
   const hNormal=document.getElementById('hdr-normal');
   const hScore=document.getElementById('hdr-scoreinput');
-  if(name==='scoreinput'){
-    if(hNormal)hNormal.style.display='none';
-    if(hScore)hScore.style.display='flex';
-  }else{
-    if(hNormal)hNormal.style.display='flex';
-    if(hScore)hScore.style.display='none';
-    // ナビタブのactive更新
-    document.querySelectorAll('.hdr-nav-btn').forEach(b=>b.classList.remove('active'));
-    const activeBtn=document.getElementById('hnav-'+name);
-    if(activeBtn)activeBtn.classList.add('active');
-  }
+  // hdr-normalは常に表示、scoreinputボタンのみ切替
+  if(hNormal)hNormal.style.display='flex';
+  if(hScore)hScore.style.display=name==='scoreinput'?'flex':'none';
+  // ナビタブactive（scoreinput時はscoreをactive）
+  document.querySelectorAll('.hdr-nav-btn').forEach(b=>b.classList.remove('active'));
+  const targetNav = name==='scoreinput'?'score':name;
+  const activeBtn=document.getElementById('hnav-'+targetNav);
+  if(activeBtn)activeBtn.classList.add('active');
   if(name==='archive')renderRanking();
 }
 // GAME LIST
@@ -974,7 +968,7 @@ function renderScoreInput(){
         <div class="sb-total-score my">${myTotal}</div>
         <div class="sb-total-score">${oppTotal}</div>
       </div>
-      <button onclick="confirmScore()" style="width:100%;margin-top:16px;padding:16px;background:var(--gold);border:none;color:#1a1a1a;font-family:'Noto Sans JP',sans-serif;font-size:16px;font-weight:900;border-radius:14px;cursor:pointer;">✅ スコア確定</button>
+
 
     </div>`;
 
