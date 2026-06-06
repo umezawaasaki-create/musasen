@@ -256,11 +256,10 @@ select.sel.sel-pos{flex:0 0 80px;}
 .hdr-nav-btn.active{color:var(--gold);border-bottom-color:var(--gold);}
 
 @keyframes slowblink{0%,100%{opacity:1}50%{opacity:.3}}
-.autosave-indicator{font-size:11px;color:#2ecc71;white-space:nowrap;flex-shrink:0;animation:slowblink 2.5s ease-in-out infinite;}
+.autosave-indicator{background:#2ecc71;color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap;flex-shrink:0;animation:slowblink 2.5s ease-in-out infinite;}
 </style>
 </head>
 <body>
-<div id="sync-badge" style="display:none;position:fixed;top:70px;right:14px;background:#2ecc71;color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;z-index:250;">✅ 保存済み</div>
 <div class="g-hdr" id="main-hdr">
   <!-- ヘッダー：常にナビタブ表示 -->
   <div id="hdr-normal" style="display:flex;align-items:center;width:100%;gap:0;">
@@ -395,7 +394,7 @@ const SUPABASE_URL='https://kphxiahecnckfmxbtbow.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtwaHhpYWhlY25ja2ZteGJ0Ym93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NTI2NzQsImV4cCI6MjA5NjEyODY3NH0.K53EsF29rmezEV8igB-7kifp7zJWqT1NpAda2_bkyVg';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let saveTimer=null;
-function showSync(ok=true){const el=document.getElementById('sync-badge');if(!el)return;el.textContent=ok?'✅ 保存済み':'❌ 保存失敗';el.style.background=ok?'#2ecc71':'#e74c3c';el.style.display='block';setTimeout(()=>{el.style.display='none';},2500);}
+function showSync(ok=true){}
 async function loadGames(){
   try {
     console.log('loadGames: connecting to Supabase...');
