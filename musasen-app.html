@@ -754,7 +754,7 @@ function confirmScore(){
   saveCurrentGame();
   const _gid=document.getElementById('game-info-disp');if(_gid)_gid.textContent='';
   currentGame=null;
-  loadGames();
+  await loadGames();
   showScreen('score');
   window.scrollTo({top:0,behavior:'instant'});
 }
@@ -1114,17 +1114,66 @@ function initResults(){const bar=document.getElementById('res-yr-bar');if(!bar)r
 function setResYear(y){resYear=y;document.querySelectorAll('.res-yr-btn').forEach(b=>b.classList.toggle('active',b.textContent===(y==='all'?'全年度':y+'年')));renderResults();}
 function renderResults(){
   const el=document.getElementById('results-list');if(!el)return;
-  const filtered=resYear==='all'?GAME_RESULTS:GAME_RESULTS.filter(r=>r.year===resYear);
-  const sorted=[...filtered].reverse();
+
+  // Supabaseのgamesデータ（status='done'）＋従来のARCデータを合わせて表示
+  // Supabaseの確定済み試合を変換
+  const sbGames=games.filter(g=>g.status==='done'&&g.finalScore&&g.matchResult).map(g=>{
+    const year=g.date?parseInt(g.date.slice(0,4)):new Date().getFullYear();
+    return{
+      year, date:g.date||'', opp:g.opp, venue:g.venue||'',
+      my:g.finalScore.my, opp_score:g.finalScore.opp,
+      result:g.matchResult, round:'', fromSupabase:true, id:g.id
+    };
+  });
+
+  // 従来データと合わせてSupabaseにないものだけARCから使用
+  const sbIds=new Set(sbGames.map(g=>g.id));
+  const arcFiltered=GAME_RESULTS.filter(r=>resYear==='all'||r.year===resYear);
+
+  // Supabaseデータに年度フィルター
+  const sbFiltered=sbGames.filter(g=>resYear==='all'||g.year===resYear);
+
+  // 合わせて日付降順ソート
+  const all=[...sbFiltered,...arcFiltered].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+
+  if(!all.length){el.innerHTML='<p style="color:var(--dim);font-size:14px;padding:20px;">対戦結果がありません</p>';return;}
+
   let html='',curYear=null;
-  sorted.forEach(g=>{
-    if(g.year!==curYear){curYear=g.year;const yg=GAME_RESULTS.filter(r=>r.year===curYear);const wins=yg.filter(r=>r.result==='勝').length;const loses=yg.filter(r=>r.result==='負').length;html+=`<div class="game-season-header">${curYear}年シーズン</div><div class="season-summary"><div class="ss-item"><div class="ss-val" style="color:var(--gold);">${wins}</div><div class="ss-lbl">勝利</div></div><div class="ss-item"><div class="ss-val" style="color:var(--rb);">${loses}</div><div class="ss-lbl">敗北</div></div><div class="ss-item"><div class="ss-val">${wins+loses}</div><div class="ss-lbl">試合</div></div><div class="ss-item"><div class="ss-val" style="color:${wins>loses?'var(--gold)':'var(--rb)'};">${Math.round(wins/(wins+loses)*100)}%</div><div class="ss-lbl">勝率</div></div></div>`;}
-    const isWin=g.result==='勝';const oi=getTeamInitial(g.opp);
-    html+=`<div class="game-card ${isWin?'win':'lose'}"><div class="game-meta"><div class="game-date">📅 ${g.date.replace(/\//g,'.')}</div><div class="game-round">第${g.round}回戦</div></div>
-    <div class="game-row"><div class="game-team"><div class="game-team-logo my-logo">M</div><div class="game-team-name my-name">自チーム</div></div>
-    <div class="game-score-center"><div class="game-score-nums"><span class="score-my ${isWin?'win-score':'lose-score'}">${g.my}</span><span class="score-sep">-</span><span class="score-opp">${g.opp_score}</span></div><span class="game-result-badge ${isWin?'badge-win':'badge-lose'}">${isWin?'WIN':'LOSE'}</span></div>
-    <div class="game-team"><div class="game-team-logo ${isWin?'win-logo':'lose-logo'}">${oi}</div><div class="game-team-name">${g.opp}</div></div></div>
-    <div class="game-venue">📍 ${g.venue}</div></div>`;
+  all.forEach(g=>{
+    const yr=g.year||parseInt((g.date||'').slice(0,4));
+    if(yr!==curYear){
+      curYear=yr;
+      const yg=all.filter(r=>(r.year||parseInt((r.date||'').slice(0,4)))===curYear);
+      const wins=yg.filter(r=>r.result==='勝').length;
+      const loses=yg.filter(r=>r.result==='負').length;
+      const total=wins+loses;
+      html+=`<div class="game-season-header">${curYear}年シーズン</div>
+      <div class="season-summary">
+        <div class="ss-item"><div class="ss-val" style="color:var(--gold);">${wins}</div><div class="ss-lbl">勝利</div></div>
+        <div class="ss-item"><div class="ss-val" style="color:var(--rb);">${loses}</div><div class="ss-lbl">敗北</div></div>
+        <div class="ss-item"><div class="ss-val">${total}</div><div class="ss-lbl">試合</div></div>
+        <div class="ss-item"><div class="ss-val" style="color:${wins>=loses?'var(--gold)':'var(--rb)'};">${total>0?Math.round(wins/total*100):0}%</div><div class="ss-lbl">勝率</div></div>
+      </div>`;
+    }
+    const isWin=g.result==='勝';
+    const oi=getTeamInitial(g.opp);
+    const myScore=g.my!==undefined?g.my:g.my;
+    const oppScore=g.opp_score!==undefined?g.opp_score:(g.opp_score||0);
+    html+=`<div class="game-card ${isWin?'win':'lose'}">
+      <div class="game-meta">
+        <div class="game-date">${g.date||''}</div>
+        ${g.round?`<div class="game-round">第${g.round}回戦</div>`:''}
+      </div>
+      <div class="game-row">
+        <div class="game-team"><div class="game-team-logo my-logo">M</div><div class="game-team-name my-name">自チーム</div></div>
+        <div class="game-score-center">
+          <div class="game-score-nums"><span class="score-my ${isWin?'win-score':'lose-score'}">${myScore}</span><span class="score-sep">-</span><span class="score-opp">${oppScore}</span></div>
+          <span class="game-result-badge ${isWin?'badge-win':'badge-lose'}">${isWin?'WIN':'LOSE'}</span>
+        </div>
+        <div class="game-team"><div class="game-team-logo ${isWin?'win-logo':'lose-logo'}">${oi}</div><div class="game-team-name">${g.opp}</div></div>
+      </div>
+      <div class="game-venue">${g.venue||''}</div>
+    </div>`;
   });
   el.innerHTML=html;
 }
@@ -1262,7 +1311,7 @@ function showArcMode(name){
   document.getElementById('arcbtn-results').classList.toggle('active',name==='results');
   if(name==='ranking')renderRanking();
   if(name==='team')renderTeamYears();
-  if(name==='results')renderResults();
+  if(name==='results'){loadGames().then(()=>renderResults());}
 }
 </script>
 </body>
