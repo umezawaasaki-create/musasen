@@ -402,7 +402,7 @@ async function loadGames(){
     const{data,error}=await sb.from('games').select('*').order('date',{ascending:false});
     if(error){console.error('Supabase error:',error.message,error);showSync(false);renderGameList();return;}
     console.log('loadGames: got',data?data.length:0,'rows');
-    games=data.map(r=>({id:r.id,opp:r.opp,date:r.date,venue:r.venue,status:r.status,orders:r.orders||9,scores:r.scores,batters:r.batters,pinchHitters:r.pinch_hitters,pitchers:r.pitchers,finalScore:r.final_score,matchResult:r.match_result}));
+    games=data.map(r=>({id:r.id,opp:r.opp,date:r.date,venue:r.venue,status:r.status,orders:r.orders||9,scores:r.scores,batters:r.batters,pinchHitters:r.pinch_hitters,pitchers:r.pitchers,finalScore:r.final_score,matchResult:r.match_result,updatedAt:r.updated_at}));
     console.log('loadGames: games=',games.length);
     renderGameList();
   } catch(e) {
@@ -607,6 +607,22 @@ function showScreen(name){
   if(name==='archive')renderRanking();
 }
 // GAME LIST
+
+function formatUpdatedAt(iso){
+  if(!iso) return '';
+  const d = new Date(iso);
+  const now = new Date();
+  const diff = Math.floor((now - d) / 1000);
+  if(diff < 60) return '今';
+  if(diff < 3600) return Math.floor(diff/60)+'分前';
+  if(diff < 86400) return Math.floor(diff/3600)+'時間前';
+  const m = d.getMonth()+1;
+  const day = d.getDate();
+  const h = d.getHours().toString().padStart(2,'0');
+  const min = d.getMinutes().toString().padStart(2,'0');
+  return m+'/'+day+' '+h+':'+min;
+}
+
 function renderGameList(){
   const el=document.getElementById('gamelist-all');
   if(!el) return;
@@ -625,7 +641,8 @@ function gameCard(g){
   return`<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:14px;" onclick="openGame('${g.id}')">
     <div style="width:52px;height:52px;border-radius:12px;background:var(--surface2);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;font-family:'Bebas Neue',cursive;color:var(--gold);flex-shrink:0;">${initial}</div>
     <div style="flex:1;min-width:0;"><div style="font-size:17px;font-weight:700;margin-bottom:3px;">vs ${g.opp}</div><div style="font-size:12px;color:var(--dim);margin-bottom:3px;">📅 ${g.date}</div><div style="font-size:11px;color:var(--dimmer);">📍 ${g.venue}</div></div>
-    <div style="text-align:right;flex-shrink:0;">${rightHtml}</div>
+    <div style="text-align:right;flex-shrink:0;min-width:60px;">${rightHtml}${g.updatedAt?`<div style="font-size:10px;color:var(--dimmer);margin-top:4px;">${formatUpdatedAt(g.updatedAt)}</div>`:''}</div>
+
   </div>`;
 }
 function openNewGame(){const now=new Date();now.setMinutes(0);document.getElementById('ng-date').value=now.toISOString().slice(0,16);document.getElementById('ng-opp').value='';document.getElementById('ng-venue').value='';document.getElementById('newgame-modal').classList.add('open');}
