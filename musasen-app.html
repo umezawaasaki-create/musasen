@@ -198,7 +198,7 @@ select.sel.sel-pos{flex:0 0 80px;}
 .game-team{display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;}
 .game-team-name{font-size:12px;font-weight:700;color:var(--dim);text-align:center;}
 .game-team-name.my-name{color:var(--text);}
-.game-team-logo{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;font-family:'Bebas Neue',cursive;background:var(--surface2);border:2px solid var(--border);line-height:1;}
+.game-team-logo{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;font-family:'Bebas Neue',cursive;background:var(--surface2);line-height:1;}
 .game-team-logo.my-logo{background:rgba(240,192,64,.15);border-color:var(--gold);color:var(--gold);}
 .game-team-logo.win-logo{background:rgba(240,192,64,.08);border-color:rgba(240,192,64,.4);color:var(--gold);}
 .game-team-logo.lose-logo{background:var(--surface2);border-color:var(--border);color:var(--dim);}
@@ -228,7 +228,7 @@ select.sel.sel-pos{flex:0 0 80px;}
 .sb-header-cell.my{color:var(--gold);}
 .sb-row{display:grid;grid-template-columns:48px 1fr 1fr;gap:8px;margin-bottom:8px;align-items:center;}
 .sb-inn-label{font-family:'Bebas Neue',cursive;font-size:18px;color:var(--dimmer);text-align:center;letter-spacing:1px;}
-.sb-score-btn{width:100%;height:58px;border-radius:12px;border:2px solid var(--border);background:var(--surface2);color:var(--text);font-family:'Bebas Neue',cursive;font-size:28px;cursor:pointer;transition:all .15s;}
+.sb-score-btn{width:100%;height:58px;border-radius:12px;background:var(--surface2);color:var(--text);font-family:'Bebas Neue',cursive;font-size:28px;cursor:pointer;transition:all .15s;}
 .sb-score-btn:active{transform:scale(.93);}
 .sb-score-btn.my-btn{border-color:rgba(240,192,64,.5);color:var(--gold);background:rgba(240,192,64,.08);}
 .sb-score-btn.has-score{border-width:2px;}
@@ -1074,7 +1074,7 @@ function renderRanking(){
   const asc=cat.key==='so';
   data=[...data].sort((a,b)=>asc?a[cat.key]-b[cat.key]:b[cat.key]-a[cat.key]);
   const list=document.getElementById('rank-list');if(!list)return;
-  list.innerHTML=data.map((r,i)=>{const nc=i===0?'gold':i===1?'silver':i===2?'bronze':'other';const subYears=rankYear==='all'?ARC_BATTING.filter(x=>x.name+'('+x.num+')'===r.name+'('+r.num+')').map(x=>x.year).join('・')+'年':r.year+'年';const pk=r.name+'('+r.num+')';const ph=getPlayerPhoto(r.num);return`<div class="rank-card" onclick="openPlayerModal('${pk}')"><div class="rank-num ${nc}">${i+1}</div><img src="${ph}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border);"><div class="rank-info"><div class="rank-name">${r.name}(${r.num})</div><div class="rank-sub">${subYears} / ${r.games}試合 ${r.ab}打数</div></div><div><div class="rank-val ${cat.color}">${cat.fmt(r[cat.key])}</div><div class="rank-val-unit">${cat.unit}</div></div></div>`;}).join('')||'<p style="color:var(--dim);font-size:14px;padding:20px;">データがありません</p>';
+  list.innerHTML=data.map((r,i)=>{const nc=i===0?'gold':i===1?'silver':i===2?'bronze':'other';const subYears=rankYear==='all'?ARC_BATTING.filter(x=>x.name+'('+x.num+')'===r.name+'('+r.num+')').map(x=>x.year).join('・')+'年':r.year+'年';const pk=r.name+'('+r.num+')';const ph=getPlayerPhoto(r.num);return`<div class="rank-card" onclick="openPlayerModal('${pk}')"><div class="rank-num ${nc}">${i+1}</div><img src="${ph}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0;"><div class="rank-info"><div class="rank-name">${r.name}(${r.num})</div><div class="rank-sub">${r.games}試合 ${r.ab}打数</div></div><div><div class="rank-val ${cat.color}">${cat.fmt(r[cat.key])}</div><div class="rank-val-unit">${cat.unit}</div></div></div>`;}).join('')||'<p style="color:var(--dim);font-size:14px;padding:20px;">データがありません</p>';
 }
 // TEAM YEARS
 function renderTeamYears(){const el=document.getElementById('team-year-list');if(!el)return;el.innerHTML=[...TEAM_YEARS].reverse().map(t=>{const wc=t.w>t.l?'var(--gold)':'var(--rb)';const ec=t.era<6?'var(--gb)':t.era<8?'var(--gold)':'var(--rb)';return`<div class="team-yr-card"><div class="ty-hdr"><div class="ty-year">${t.year}年</div><div style="font-size:16px;font-weight:900;color:${wc};">${t.w}勝 ${t.l}敗 ${t.d}分</div></div><div class="ty-stats"><div class="ty-st"><div class="ty-val" style="color:var(--gold);">${t.avg.toFixed(3).replace('0.','.')}</div><div class="ty-lbl">打率</div></div><div class="ty-st"><div class="ty-val" style="color:var(--gold);">${t.r}</div><div class="ty-lbl">総得点</div></div><div class="ty-st"><div class="ty-val" style="color:${ec};">${t.era.toFixed(2)}</div><div class="ty-lbl">防御率</div></div><div class="ty-st"><div class="ty-val" style="color:var(--gb);">${t.so}</div><div class="ty-lbl">奪三振</div></div><div class="ty-st"><div class="ty-val">${t.slg.toFixed(3)}</div><div class="ty-lbl">長打率</div></div><div class="ty-st"><div class="ty-val">${t.obp.toFixed(3)}</div><div class="ty-lbl">出塁率</div></div><div class="ty-st"><div class="ty-val">${t.ops.toFixed(3)}</div><div class="ty-lbl">OPS</div></div><div class="ty-st"><div class="ty-val" style="color:var(--blue);">${t.bb}</div><div class="ty-lbl">与四球</div></div></div></div>`;}).join('');}
@@ -1083,7 +1083,7 @@ function openPlayerModal(player){
   const rows=ARC_BATTING.filter(r=>r.name+'('+r.num+')'===player);if(!rows.length)return;
   const pmNum=(ARC_BATTING.find(r=>r.name+'('+r.num+')'===player)||{}).num;
   const pmPhoto=pmNum?getPlayerPhoto(pmNum):PLAYER_PHOTO_DEFAULT;
-  document.getElementById('pm-name').innerHTML=`<img src="${pmPhoto}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);margin-right:12px;vertical-align:middle;">${player}`;
+  document.getElementById('pm-name').innerHTML=`<img src="${pmPhoto}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;margin-right:12px;vertical-align:middle;">${player}`;
   const T=rows.reduce((a,r)=>({games:a.games+r.games,ab:a.ab+r.ab,h:a.h+r.h,d:a.d+r.d,t:a.t+r.t,hr:a.hr+r.hr,rbi:a.rbi+r.rbi,bb:a.bb+r.bb,hbp:a.hbp+r.hbp,so:a.so+r.so,sb:a.sb+r.sb}),{games:0,ab:0,h:0,d:0,t:0,hr:0,rbi:0,bb:0,hbp:0,so:0,sb:0});
   const avg=T.ab>0?(T.h/T.ab).toFixed(3).replace('0.','.'):'.---';const slg=T.ab>0?((T.h+T.d+T.t*2+T.hr*3)/T.ab).toFixed(3):'---';const obp=(T.ab+T.bb+T.hbp)>0?((T.h+T.bb+T.hbp)/(T.ab+T.bb+T.hbp)).toFixed(3):'---';const ops_w=rows.reduce((a,r)=>a+r.ab,0);const ops=ops_w>0?(rows.reduce((a,r)=>a+r.ops*r.ab,0)/ops_w).toFixed(3):'---';
   let html=`<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px;"><div class="cc-stat" style="padding:12px;"><div class="cc-val" style="color:var(--gold);font-size:28px;">${avg}</div><div class="cc-lbl">通算打率</div></div><div class="cc-stat" style="padding:12px;"><div class="cc-val" style="font-size:28px;">${ops}</div><div class="cc-lbl">通算OPS</div></div></div>
@@ -1231,10 +1231,10 @@ function renderPitcherRanking(){
     const pitPhoto=getPlayerPhoto(r.num);
     return`<div class="rank-card">
       <div class="rank-num ${nc}">${i+1}</div>
-      <img src="${pitPhoto}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border);">
+      <img src="${pitPhoto}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0;">
       <div class="rank-info">
         <div class="rank-name">${r.name}(${r.num})</div>
-        <div class="rank-sub">${subYears} / ${r.games}試合 ${r.ipDisp}回 ${r.w}勝${r.l}敗${r.sv>0?' '+r.sv+'S':''}</div>
+        <div class="rank-sub">${r.games}試合 ${r.ipDisp}回 ${r.w}勝${r.l}敗${r.sv>0?' '+r.sv+'S':''}</div>
         <div class="rank-sub" style="margin-top:2px;">K:${r.so} BB:${r.bb} 被安:${r.h}</div>
       </div>
       <div>
