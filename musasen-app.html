@@ -284,7 +284,7 @@ select.sel.sel-pos{flex:0 0 80px;}
   display:none;flex-direction:column;
   overflow:hidden;
 }
-.agent-window.open{display:flex;animation:agent-slide-up .25s ease;}
+.agent-window.open{display:flex;}
 body.agent-open{overflow:hidden;position:fixed;width:100%;}
 
 
@@ -1455,20 +1455,12 @@ async function saveApiKeyToSupabase(key) {
   } catch(e) { console.warn('saveApiKeyToSupabase error', e); }
 }
 
-// スマホキーボード対応
+// スマホキーボード対応（iOS Safari）
 if (window.visualViewport) {
   window.visualViewport.addEventListener('resize', () => {
     const win = document.getElementById('agent-window');
     if (win && win.classList.contains('open')) {
-      win.style.height = window.visualViewport.height + 'px';
-      win.style.top = window.visualViewport.offsetTop + 'px';
       scrollAgentToBottom();
-    }
-  });
-  window.visualViewport.addEventListener('scroll', () => {
-    const win = document.getElementById('agent-window');
-    if (win && win.classList.contains('open')) {
-      win.style.top = window.visualViewport.offsetTop + 'px';
     }
   });
 }
