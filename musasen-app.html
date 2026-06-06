@@ -675,11 +675,22 @@ function openGame(gameId){
   setTimeout(()=>{renderBatters();renderPitchers('my');renderPitchers('opp');showSubTab('score');},50);
 }
 
-function saveAndBack(){
-  saveCurrentGame();
+async function saveAndBack(){
+  // 保存完了を待ってからリスト取得
+  if(currentGame){
+    currentGame.batters=JSON.parse(JSON.stringify(batters));
+    currentGame.scores=JSON.parse(JSON.stringify(scores));
+    currentGame.pitchers=JSON.parse(JSON.stringify(pitchers));
+    currentGame.pinchHitters=JSON.parse(JSON.stringify(pinchHitters||{top:{},bot:{}}));
+    currentGame.orders=ORDERS;
+    let my=0,opp=0;
+    for(let i=1;i<=INNINGS;i++){my+=scores[i].top||0;opp+=scores[i].bot||0;}
+    currentGame.finalScore={my,opp};
+    await saveGameToSupabase(currentGame);
+  }
   const _gid=document.getElementById('game-info-disp');if(_gid)_gid.textContent='';
   currentGame=null;
-  loadGames();
+  await loadGames();
   showScreen('score');
 }
 function tempSave(){ saveAndBack(); }
