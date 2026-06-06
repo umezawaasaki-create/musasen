@@ -293,9 +293,8 @@ select.sel.sel-pos{flex:0 0 80px;}
     <div id="bat-list"></div>
   </div>
 
-  <!-- 下部ボタン（全タブ共通） -->
+  <!-- 下部ボタン -->
   <div style="padding:16px 14px 30px;display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--border);margin-top:10px;">
-    <button onclick="saveAndBack()" style="width:100%;padding:16px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:15px;font-weight:700;border-radius:14px;cursor:pointer;">一時保存して戻る</button>
     <button onclick="confirmScore()" style="width:100%;padding:16px;background:var(--gold);border:none;color:#1a1a1a;font-family:'Noto Sans JP',sans-serif;font-size:15px;font-weight:900;border-radius:14px;cursor:pointer;">✅ スコア確定</button>
   </div>
 </div>
@@ -589,9 +588,13 @@ function showScreen(name){
   // ナビタブは常に表示・active更新
   const hNormal=document.getElementById('hdr-normal');
   const hScore=document.getElementById('hdr-scoreinput');
-  // hdr-normalは常に表示、scoreinputボタンのみ切替
-  if(hNormal)hNormal.style.display='flex';
-  if(hScore)hScore.style.display=name==='scoreinput'?'flex':'none';
+  if(name==='scoreinput'){
+    if(hNormal)hNormal.style.display='none';
+    if(hScore)hScore.style.display='flex';
+  }else{
+    if(hNormal)hNormal.style.display='flex';
+    if(hScore)hScore.style.display='none';
+  }
   // ナビタブactive（scoreinput時はscoreをactive）
   document.querySelectorAll('.hdr-nav-btn').forEach(b=>b.classList.remove('active'));
   const targetNav = name==='scoreinput'?'score':name;
