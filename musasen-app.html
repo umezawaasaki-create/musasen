@@ -1454,7 +1454,10 @@ function openAgent() {
     if (!MUSACHEN_API_KEY) {
       setTimeout(() => showApiKeyPrompt(), 300);
     } else {
-      setTimeout(() => addAgentMsg('bot', getWelcomeMsg()), 400);
+      // Supabaseデータを先に取得してからウェルカムメッセージを表示
+      fetchLiveGamesForAgent().then(() => {
+        setTimeout(() => addAgentMsg('bot', getWelcomeMsg()), 400);
+      });
     }
   }
   scrollAgentToBottom();
@@ -1555,7 +1558,22 @@ function getWelcomeMsg() {
   const ty = TEAM_YEARS.find(t => t.year === latestYear);
   const wins = ty ? ty.w : '?';
   const losses = ty ? ty.l : '?';
-  return `ムサチェンです。データ分析、始めます。📊\n\n${latestYear}シーズン現在、チームは<span class="stat-chip">${wins}勝${losses}敗</span>。選手全員の成績データを把握しています。\n\n個人の成績分析、練習アドバイス、チーム状況のコメントなど、何でも聞いてください。上の選手選択で個人特化モードにもなりますよ。`;
+
+  // Supabaseの最新確定試合を取得
+  let latestGameMsg = '';
+  if (agentLiveGames && agentLiveGames.length > 0) {
+    const done = agentLiveGames.filter(g => g.status === 'done');
+    if (done.length > 0) {
+      const lg = done[0];
+      const sc = lg.final_score || {};
+      const my = sc.my ?? '-';
+      const opp = sc.opp ?? '-';
+      const result = lg.match_result || (sc.my != null ? (sc.my > sc.opp ? '勝利' : sc.my < sc.opp ? '敗戦' : '引分') : '');
+      latestGameMsg = `\n最新の確定試合は <span class="stat-chip">vs ${lg.opp} ${my}-${opp} ${result}</span> 。`;
+    }
+  }
+
+  return `ムサチェンです。データ分析、始めます。📊\n\n${latestYear}シーズン現在、チームは<span class="stat-chip">${wins}勝${losses}敗</span>。${latestGameMsg}\n\nSupabaseの試合データもリアルタイムで見てるぞ。個人の成績分析、練習アドバイス、試合の振り返りなど何でも聞いてくれ！`;
 }
 
 function sendQuick(text) {
@@ -1613,7 +1631,7 @@ async function sendAgentMsg() {
   showTypingIndicator();
 
   try {
-    const systemPrompt = buildAgentSystemPrompt();
+    const systemPrompt = await buildAgentSystemPrompt();
     const apiMessages = agentMessages.slice(-12).map(m => ({
       role: m.role === 'bot' ? 'assistant' : 'user',
       content: m.role === 'bot' ? m.text.replace(/<[^>]+>/g, '') : m.text
@@ -1679,10 +1697,78 @@ function formatAgentReply(text) {
   return result;
 }
 
-function buildAgentSystemPrompt() {
-  // Compile batting stats JSON for the selected player or all players
-  const currentYear = new Date().getFullYear();
+// Supabaseから最新試合データをキャッシュ
+let agentLiveGames = null;
+
+async function fetchLiveGamesForAgent() {
+  if (agentLiveGames !== null) return agentLiveGames;
+  try {
+    const { data, error } = await sb.from('games').select('*').order('date', { ascending: false }).limit(20);
+    if (error || !data) { agentLiveGames = []; return []; }
+    agentLiveGames = data;
+    return data;
+  } catch(e) {
+    agentLiveGames = [];
+    return [];
+  }
+}
+
+function formatLiveGameForAgent(g) {
+  const score = g.final_score || {};
+  const my = score.my ?? '未確定';
+  const opp = score.opp ?? '未確定';
+  const result = g.match_result || (score.my != null && score.opp != null ? (score.my > score.opp ? '勝' : score.my < score.opp ? '負' : '引分') : '未確定');
+  const status = g.status === 'done' ? '確定済' : '未確定/進行中';
+
+  // 打撃成績をまとめる
+  let batSummary = '';
+  if (g.batters) {
+    const half = g.batters.top || {};
+    const entries = [];
+    for (let o = 1; o <= 9; o++) {
+      const b = half[o];
+      if (!b || !b.name) continue;
+      const results = b.results || {};
+      let h = 0, ab = 0, rbi = 0, hr = 0, bb = 0, sb = 0;
+      Object.values(results).forEach(r => {
+        if (!r || !r.type) return;
+        const t = r.type;
+        if (['H','二塁打','三塁打','本塁打'].includes(t)) { h++; ab++; }
+        else if (['凡打','三振'].includes(t)) { ab++; }
+        else if (['四球','死球'].includes(t)) { bb++; }
+        if (t === '本塁打') hr++;
+        if (t === '盗塁') sb++;
+        rbi += r.rbi || 0;
+      });
+      entries.push(`${b.name}: ${h}安打/${ab}打数 打点${rbi}${hr>0?' HR'+hr:''}`);
+    }
+    if (entries.length) batSummary = '\n  打撃: ' + entries.join(', ');
+  }
+
+  // 投手成績
+  let pitSummary = '';
+  if (g.pitchers && g.pitchers.my && g.pitchers.my.length) {
+    pitSummary = '\n  投手: ' + g.pitchers.my.map(p =>
+      `${p.name}(${p.innings || '?'}回 ${p.earnedRuns ?? '?'}失点 K${p.strikeouts ?? 0})`
+    ).join(', ');
+  }
+
+  return `【${g.date ? g.date.slice(0,10) : '日付不明'} vs ${g.opp || '相手不明'}】${status} ${my}-${opp} ${result}${batSummary}${pitSummary}`;
+}
+
+async function buildAgentSystemPrompt() {
   const latestYear = Math.max(...ARC_YEARS);
+
+  // Supabaseから最新試合データ取得
+  const liveGames = await fetchLiveGamesForAgent();
+  const liveGamesSummary = liveGames.length
+    ? liveGames.slice(0, 10).map(formatLiveGameForAgent).join('\n')
+    : '（データなし）';
+
+  // 直近の確定試合を別途まとめる
+  const doneGames = liveGames.filter(g => g.status === 'done').slice(0, 5);
+  const latestGame = doneGames[0] || null;
+  const latestGameStr = latestGame ? formatLiveGameForAgent(latestGame) : '（確定試合なし）';
 
   let playerContext = '';
   if (agentSelectedPlayer) {
@@ -1692,13 +1778,9 @@ function buildAgentSystemPrompt() {
     const pitStats = ARC_PITCHING.filter(p => p.name === name || p.num === num);
     playerContext = `\n\n## 選択中の選手: ${name}(#${num})\n### 打撃成績（年度別）\n${JSON.stringify(batStats, null, 1)}\n### 投球成績（年度別）\n${JSON.stringify(pitStats, null, 1)}`;
   } else {
-    // latest year top stats
     const latestBat = ARC_BATTING.filter(b => b.year === latestYear).sort((a,b) => b.avg - a.avg).slice(0, 8);
     playerContext = `\n\n## ${latestYear}年 打撃上位選手\n${JSON.stringify(latestBat, null, 1)}`;
   }
-
-  // Recent game results
-  const recentGames = [...GAME_RESULTS].reverse().slice(0, 6);
 
   return `あなたは草野球チーム「ムサセン」の専属データアナリスト「ムサチェン」です。チームの一員として、データに基づいた分析と具体的なアドバイスをします。
 
@@ -1712,18 +1794,23 @@ function buildAgentSystemPrompt() {
 - 一人称は「ムサチェン」または「俺」
 
 ## チームデータ
-### チーム年度別成績
+### チーム年度別成績（固定統計）
 ${JSON.stringify(TEAM_YEARS, null, 1)}
-
-### 直近の試合結果
-${JSON.stringify(recentGames, null, 1)}
 
 ### 全選手リスト
 ${JSON.stringify(MEMBERS.map(m=>m.name+'('+m.num+')'), null, 1)}
+
+## ★ リアルタイム試合データ（Supabaseより取得・最新）
+### 直近の確定試合
+${latestGameStr}
+
+### 最近の試合一覧（最新10件）
+${liveGamesSummary}
 ${playerContext}
 
 ## 回答のガイドライン
 - 日本語で回答する
+- 「今日の試合」「最新の試合」はリアルタイム試合データを必ず参照して答える
 - 成績の数字を必ず引用して具体的に話す
 - 打撃アドバイス: 打率(.250以上=良い、.300以上=優秀)、出塁率(.350以上=良い)を基準に
 - 練習提案は草野球で実践できる具体的なものにする
