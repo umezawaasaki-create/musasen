@@ -278,8 +278,7 @@ select.sel.sel-pos{flex:0 0 80px;}
 <div id="screen-scoreinput" class="screen">
   <div class="sub-tabs" style="justify-content:flex-start;gap:0;">
     <div class="sub-tab" onclick="showSubTab('score')" style="flex:1;">点数</div>
-    <div class="sub-tab active" onclick="showSubTab('bat')" style="flex:1;">打撃</div>
-    <div class="sub-tab" onclick="showSubTab('pit')" style="flex:1;">投手</div>
+    <div class="sub-tab active" onclick="showSubTab('bat')" style="flex:1;">投打成績</div>
   </div>
   <!-- 点数入力タブ -->
   <div id="subtab-score" style="display:none;">
@@ -287,21 +286,13 @@ select.sel.sel-pos{flex:0 0 80px;}
   </div>
   <div id="subtab-bat">
     <div class="half-bar">
-      <button class="half-btn active" id="h-top" onclick="setHalf('top')">ムサセン攻撃</button>
-      <button class="half-btn" id="h-bot" onclick="setHalf('bot')">相手攻撃</button>
+      <button class="half-btn active" id="h-top" onclick="setHalf('top')">攻撃</button>
+      <button class="half-btn" id="h-bot" onclick="setHalf('bot')">投手/守備</button>
     </div>
+    <div id="pitcher-assign-wrap"></div>
     <div id="bat-list"></div>
   </div>
-  <div id="subtab-pit" style="display:none;">
-    <div class="pit-wrap">
-      <div class="p-sec">ムサセン投手陣</div>
-      <div id="my-pitchers"></div>
-      <button class="btn-add-p" onclick="addPitcher('my')">＋ 投手を追加</button>
-      <div class="p-sec" style="margin-top:16px;">相手チーム投手陣</div>
-      <div id="opp-pitchers"></div>
-      <button class="btn-add-p" onclick="addPitcher('opp')">＋ 投手を追加</button>
-    </div>
-  </div>
+
   <!-- 下部ボタン（全タブ共通） -->
   <div style="padding:16px 14px 30px;display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--border);margin-top:10px;">
     <button onclick="saveAndBack()" style="width:100%;padding:16px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:15px;font-weight:700;border-radius:14px;cursor:pointer;">一時保存して戻る</button>
@@ -680,7 +671,7 @@ function openGame(gameId){
   else pitchers={my:[],opp:[]};
   if(g.status==='upcoming'){g.status='inprogress';saveGameToSupabase(g);}
   showScreen('scoreinput');
-  setTimeout(()=>{renderBatters();renderPitchers('my');renderPitchers('opp');showSubTab('score');},50);
+  setTimeout(()=>{curHalf='top';document.getElementById('pitcher-assign-wrap').innerHTML='';renderBatters();showSubTab('bat');},50);
 }
 
 async function saveAndBack(){
@@ -725,7 +716,15 @@ async function backToGameList(){
   showScreen('score');
 }
 // SCORE
-function setHalf(h){curHalf=h;document.getElementById('h-top').classList.toggle('active',h==='top');document.getElementById('h-bot').classList.toggle('active',h==='bot');updateScoreHeader();renderBatters();}
+function setHalf(h){
+  curHalf=h;
+  document.getElementById('h-top').classList.toggle('active',h==='top');
+  document.getElementById('h-bot').classList.toggle('active',h==='bot');
+  updateScoreHeader();
+  if(h==='bot') renderPitcherAssign();
+  else document.getElementById('pitcher-assign-wrap').innerHTML='';
+  renderBatters();
+}
 function updateScoreHeader(){
   // スコアをcurrentGameに反映
   if(currentGame){
@@ -809,6 +808,67 @@ function openModalEx(half,order,isPinch,pidx,inning,atBat=0){
 function closeModal(e){document.getElementById('res-modal').classList.remove('open');}
 
 // 相手攻撃データからムサセン投手成績を自動計算
+// 投手担当イニング表示・入力UI
+function renderPitcherAssign(){
+  const wrap = document.getElementById('pitcher-assign-wrap');
+  if(!wrap) return;
+
+  // 投手データがなければ青木を追加
+  if(pitchers.my.length===0){
+    pitchers.my.push({name:'青木(18)',ip:0,ip3:0,er:0,r:0,so:0,bb:0,hbp:0,h:0,hr:0,wp:0,result:'-',fromInning:1,toInning:9});
+  }
+
+  let html = '<div style="padding:10px 12px;background:var(--surface);border-bottom:1px solid var(--border);">';
+  html += '<div class="p-sec" style="margin:0 0 10px;">ムサセン投手陣</div>';
+
+  pitchers.my.forEach((p,idx)=>{
+    const thirds=p.ip*3+p.ip3;
+    const era=thirds>0?((p.er*27)/thirds).toFixed(2):'---';
+    const ec=parseFloat(era)<3?'var(--gb)':parseFloat(era)<6?'var(--gold)':'var(--rb)';
+    html += `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <select class="p-name-sel" onchange="pitchers.my[${idx}].name=this.value;scheduleSave()">${pitcherMemberOptions(p.name)}</select>
+        <span style="font-family:'Bebas Neue',cursive;font-size:14px;color:${ec};white-space:nowrap;">防 ${era}</span>
+        ${pitchers.my.length>1?`<button class="btn-del" onclick="pitchers.my.splice(${idx},1);renderPitcherAssign()">✕</button>`:''}
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span style="font-size:13px;color:var(--dim);">担当:</span>
+        <select style="background:var(--surface);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:13px;padding:6px;outline:none;" onchange="pitchers.my[${idx}].fromInning=parseInt(this.value);scheduleSave()">
+          ${[1,2,3,4,5,6,7,8,9].map(n=>`<option value="${n}"${(p.fromInning||1)===n?' selected':''}>${n}回</option>`).join('')}
+        </select>
+        <span style="color:var(--dim);">〜</span>
+        <select style="background:var(--surface);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:13px;padding:6px;outline:none;" onchange="pitchers.my[${idx}].toInning=parseInt(this.value);updatePitcherIP(${idx});scheduleSave()">
+          ${[1,2,3,4,5,6,7,8,9].map(n=>`<option value="${n}"${(p.toInning||9)===n?' selected':''}>${n}回</option>`).join('')}
+        </select>
+        <span style="font-size:13px;color:var(--dim);">勝敗:</span>
+        <select style="background:var(--surface);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:13px;padding:6px;outline:none;" onchange="pitchers.my[${idx}].result=this.value;scheduleSave()">
+          <option value="-"${p.result==='-'?' selected':''}>－</option>
+          <option value="勝ち"${p.result==='勝ち'?' selected':''}>勝ち</option>
+          <option value="負け"${p.result==='負け'?' selected':''}>負け</option>
+          <option value="セーブ"${p.result==='セーブ'?' selected':''}>セーブ</option>
+          <option value="ホールド"${p.result==='ホールド'?' selected':''}>ホールド</option>
+        </select>
+      </div>
+    </div>`;
+  });
+
+  html += `<button class="btn-add-p" onclick="pitchers.my.push({name:'',ip:0,ip3:0,er:0,r:0,so:0,bb:0,hbp:0,h:0,hr:0,wp:0,result:'-',fromInning:1,toInning:9});renderPitcherAssign()">＋ 投手を追加</button>`;
+  html += '</div>';
+  wrap.innerHTML = html;
+
+  // 相手攻撃データから投手成績を自動計算
+  calcPitcherFromBatting();
+}
+
+function updatePitcherIP(idx){
+  const p=pitchers.my[idx];
+  const from=p.fromInning||1;
+  const to=p.toInning||9;
+  p.ip=Math.max(0,to-from+1);
+  p.ip3=0;
+  renderPitcherAssign();
+}
+
 function calcPitcherFromBatting(){
   // 相手の打席結果を集計
   let totalH=0,totalHR=0,totalBB=0,totalHBP=0,totalSO=0,totalWP=0,totalR=0;
@@ -849,14 +909,15 @@ function calcPitcherFromBatting(){
   let totalLost=0;
   for(let i=1;i<=INNINGS;i++) totalLost+=scores[i].bot||0;
 
-  // ムサセン投手陣に反映（先発投手1人の場合は全部、複数の場合は合計のみ参考表示）
-  if(pitchers.my.length===1){
+  // 投手が未登録なら自動で青木を追加
+  if(pitchers.my.length===0){
+    pitchers.my.push({name:'青木(18)',ip:0,ip3:0,er:0,r:0,so:0,bb:0,hbp:0,h:0,hr:0,wp:0,result:'-'});
+  }
+  // 投手1人の場合は全て反映、複数の場合は合計を先頭投手に反映
+  if(pitchers.my.length>=1){
     const p=pitchers.my[0];
     p.h=totalH; p.hr=totalHR; p.bb=totalBB; p.hbp=totalHBP;
     p.so=totalSO; p.wp=totalWP; p.r=totalLost; p.er=totalLost;
-    renderPitchers('my');
-  } else if(pitchers.my.length>1){
-    // 複数投手の場合は最後の投手に差分を入れない（手動入力を尊重）
     renderPitchers('my');
   }
 }
@@ -886,8 +947,8 @@ function recalcScore(half,inning){
   scores[inning][half]=t;
 }
 function showSubTab(name){
-  ['score','bat','pit'].forEach(t=>{document.getElementById('subtab-'+t).style.display=t===name?'block':'none';});
-  document.querySelectorAll('.sub-tab').forEach((el,i)=>el.classList.toggle('active',['score','bat','pit'][i]===name));
+  ['score','bat'].forEach(t=>{document.getElementById('subtab-'+t).style.display=t===name?'block':'none';});
+  document.querySelectorAll('.sub-tab').forEach((el,i)=>el.classList.toggle('active',['score','bat'][i]===name));
   if(name==='score') renderScoreInput();
 }
 // PITCHERS
