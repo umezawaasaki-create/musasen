@@ -610,7 +610,9 @@ function showScreen(name){
 
 function formatUpdatedAt(iso){
   if(!iso) return '';
-  const d = new Date(iso);
+  // +00や+00:00をZに統一してUTCとして正しく解釈
+  const isoZ = iso.replace(/\+00(:00)?$/, 'Z');
+  const d = new Date(isoZ);
   const now = new Date();
   const diff = Math.floor((now - d) / 1000);
   if(diff < 60) return '今';
