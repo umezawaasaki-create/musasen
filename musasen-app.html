@@ -449,6 +449,8 @@ setInterval(()=>{if(lastSavedAt)updateAutosaveTime();},30000);
 function saveCurrentGame(){if(!currentGame)return;currentGame.batters=JSON.parse(JSON.stringify(batters));currentGame.scores=JSON.parse(JSON.stringify(scores));currentGame.pitchers=JSON.parse(JSON.stringify(pitchers));currentGame.pinchHitters=JSON.parse(JSON.stringify(pinchHitters||{top:{},bot:{}}));currentGame.orders=ORDERS;let my=0,opp=0;for(let i=1;i<=INNINGS;i++){my+=scores[i].top||0;opp+=scores[i].bot||0;}currentGame.finalScore={my,opp};saveGameToSupabase(currentGame);}
 function subscribeRealtime(){sb.channel('games-rt').on('postgres_changes',{event:'*',schema:'public',table:'games'},payload=>{if(!currentGame||(payload.new&&payload.new.id!==currentGame.id))loadGames();}).subscribe();}
 // MASTER DATA
+const PLAYER_PHOTOS={1:'https://ts-league.com/team/musasen/profile/13695.jpg',6:'https://ts-league.com/team/musasen/profile/13739.jpg',9:'https://ts-league.com/team/musasen/profile/13742.jpg',10:'https://ts-league.com/team/musasen/profile/13743.jpg',11:'https://ts-league.com/team/musasen/profile/13744.jpg',14:'https://ts-league.com/team/musasen/profile/13745.jpg',17:'https://ts-league.com/team/musasen/profile/13746.jpg',18:'https://ts-league.com/team/musasen/profile/13747.jpg',25:'https://ts-league.com/team/musasen/profile/13748.jpg',31:'https://ts-league.com/team/musasen/profile/13749.jpg',44:'https://ts-league.com/team/musasen/profile/13750.jpg',45:'https://ts-league.com/team/musasen/profile/13751.jpg',55:'https://ts-league.com/team/musasen/profile/13753.jpg'};
+const PLAYER_PHOTO_DEFAULT='https://ts-league.com/common/images/team_introduction/pin_no.gif';
 const MEMBERS=[{num:1,name:'至'},{num:2,name:'大谷'},{num:3,name:'まつ'},{num:4,name:'古田'},{num:5,name:'田中'},{num:6,name:'太田'},{num:8,name:'伊藤'},{num:9,name:'うすい'},{num:10,name:'梅澤'},{num:11,name:'ソク'},{num:12,name:'前田'},{num:13,name:'安倍'},{num:14,name:'竹林'},{num:17,name:'難波'},{num:18,name:'青木'},{num:23,name:'しんぺい'},{num:24,name:'梶原'},{num:25,name:'笹野'},{num:31,name:'大住'},{num:44,name:'新江'},{num:45,name:'ガク'},{num:47,name:'すいみ～'},{num:55,name:'村野'},{num:66,name:'てつ'},{num:77,name:'貢司'},{num:99,name:'ケイタ'},{num:120,name:'たくま'}];
 const PITCHER_NUMS=[1,11,17,18,45];
 const POSITIONS=['投','捕','一','二','三','遊','左','中','右','DH','PR','PH'];
@@ -602,6 +604,11 @@ let games=[];
 const DEFAULT_LINEUP=[{o:1,num:31,pos:'DH'},{o:2,num:55,pos:'中'},{o:3,num:14,pos:'遊'},{o:4,num:10,pos:'三'},{o:5,num:12,pos:'右'},{o:6,num:9,pos:'捕'},{o:7,num:11,pos:'二'},{o:8,num:45,pos:'投'},{o:9,num:13,pos:'左'}];
 // OPTIONS
 function memberOptions(sel){let o='<option value="">－ 未選択 －</option>';MEMBERS.forEach(m=>{const v=m.name+'('+m.num+')';o+=`<option value="${v}"${sel===v?' selected':''}>${v}</option>`;});return o;}
+function getPlayerPhoto(num){return PLAYER_PHOTOS[num]||PLAYER_PHOTO_DEFAULT;}
+function getPlayerPhotoByName(nameNum){
+  const m=MEMBERS.find(x=>x.name+'('+x.num+')'===nameNum);
+  return m?getPlayerPhoto(m.num):PLAYER_PHOTO_DEFAULT;
+}
 function posOptions(sel){let o='<option value="">－</option>';POSITIONS.forEach(p=>o+=`<option value="${p}"${sel===p?' selected':''}>${p}</option>`);return o;}
 function pitcherMemberOptions(sel){let o='<option value="">選手を選択</option><optgroup label="投手陣">';PITCHER_NUMS.forEach(n=>{const m=MEMBERS.find(x=>x.num===n);if(m){const v=m.name+'('+m.num+')';o+=`<option value="${v}"${sel===v?' selected':''}>${v}</option>`;}});o+='</optgroup><optgroup label="全選手">';MEMBERS.filter(m=>!PITCHER_NUMS.includes(m.num)).forEach(m=>{const v=m.name+'('+m.num+')';o+=`<option value="${v}"${sel===v?' selected':''}>${v}</option>`;});return o+'</optgroup>';}
 function getTeamInitial(name){return /^[A-Za-z0-9]/.test(name)?name.slice(0,2).toUpperCase():name.slice(0,2);}
@@ -1074,7 +1081,9 @@ function renderTeamYears(){const el=document.getElementById('team-year-list');if
 // PLAYER MODAL
 function openPlayerModal(player){
   const rows=ARC_BATTING.filter(r=>r.name+'('+r.num+')'===player);if(!rows.length)return;
-  document.getElementById('pm-name').textContent=player;
+  const pmNum=(ARC_BATTING.find(r=>r.name+'('+r.num+')'===player)||{}).num;
+  const pmPhoto=pmNum?getPlayerPhoto(pmNum):PLAYER_PHOTO_DEFAULT;
+  document.getElementById('pm-name').innerHTML=`<img src="${pmPhoto}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);margin-right:10px;vertical-align:middle;">${player}`;
   const T=rows.reduce((a,r)=>({games:a.games+r.games,ab:a.ab+r.ab,h:a.h+r.h,d:a.d+r.d,t:a.t+r.t,hr:a.hr+r.hr,rbi:a.rbi+r.rbi,bb:a.bb+r.bb,hbp:a.hbp+r.hbp,so:a.so+r.so,sb:a.sb+r.sb}),{games:0,ab:0,h:0,d:0,t:0,hr:0,rbi:0,bb:0,hbp:0,so:0,sb:0});
   const avg=T.ab>0?(T.h/T.ab).toFixed(3).replace('0.','.'):'.---';const slg=T.ab>0?((T.h+T.d+T.t*2+T.hr*3)/T.ab).toFixed(3):'---';const obp=(T.ab+T.bb+T.hbp)>0?((T.h+T.bb+T.hbp)/(T.ab+T.bb+T.hbp)).toFixed(3):'---';const ops_w=rows.reduce((a,r)=>a+r.ab,0);const ops=ops_w>0?(rows.reduce((a,r)=>a+r.ops*r.ab,0)/ops_w).toFixed(3):'---';
   let html=`<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px;"><div class="cc-stat" style="padding:12px;"><div class="cc-val" style="color:var(--gold);font-size:28px;">${avg}</div><div class="cc-lbl">通算打率</div></div><div class="cc-stat" style="padding:12px;"><div class="cc-val" style="font-size:28px;">${ops}</div><div class="cc-lbl">通算OPS</div></div></div>
@@ -1219,8 +1228,10 @@ function renderPitcherRanking(){
     const ec=r.era<3?'color:var(--gb)':r.era<6?'color:var(--gold)':'color:var(--rb)';
     const subYears=rankYear==='all'?ARC_PITCHING.filter(x=>x.name+'('+x.num+')'===r.name+'('+r.num+')').map(x=>x.year).join('・')+'年':r.year+'年';
     const eraDisp=r.era===999?'---':r.era.toFixed(2);
+    const pitPhoto=getPlayerPhoto(r.num);
     return`<div class="rank-card">
       <div class="rank-num ${nc}">${i+1}</div>
+      <img src="${pitPhoto}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--border);">
       <div class="rank-info">
         <div class="rank-name">${r.name}(${r.num})</div>
         <div class="rank-sub">${subYears} / ${r.games}試合 ${r.ipDisp}回 ${r.w}勝${r.l}敗${r.sv>0?' '+r.sv+'S':''}</div>
