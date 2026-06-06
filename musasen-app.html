@@ -744,7 +744,7 @@ async function saveAndBack(){
 }
 function tempSave(){ saveAndBack(); }
 
-function confirmScore(){
+async function confirmScore(){
   if(!currentGame) return;
   let my=0,opp=0;
   for(let i=1;i<=INNINGS;i++){my+=scores[i].top||0;opp+=scores[i].bot||0;}
