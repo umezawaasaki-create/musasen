@@ -1446,16 +1446,15 @@ let agentSelectedPlayer = '';
 let agentIsTyping = false;
 let MUSACHEN_API_KEY = localStorage.getItem('musachen_api_key') || '';
 
-// SupabaseからAPIキーを取得・保存
 async function loadApiKeyFromSupabase() {
   try {
-    const { data } = await sb.from('agent_config').select('value').eq('key', 'api_key').single();
+    const { data, error } = await sb.from('agent_config').select('value').eq('key', 'api_key').single();
     if (data && data.value) {
       MUSACHEN_API_KEY = data.value;
       localStorage.setItem('musachen_api_key', data.value);
       return true;
     }
-  } catch(e) {}
+  } catch(e) { console.warn('loadApiKeyFromSupabase error', e); }
   return false;
 }
 
@@ -1471,11 +1470,16 @@ function openAgent() {
   subscribeAgentChat();
 
   if (agentMessages.length === 0) {
+    // ローディング表示
+    const el = document.getElementById('agent-messages');
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--dim);font-size:14px;">読み込み中...</div>';
+
     fetchLiveGamesForAgent().then(async () => {
-      // まずSupabaseからAPIキーを取得試みる
+      // 必ずSupabaseからAPIキーを取得してから判断
       if (!MUSACHEN_API_KEY) {
         await loadApiKeyFromSupabase();
       }
+      el.innerHTML = '';
       await loadAgentHistory();
       if (agentMessages.length === 0) {
         if (!MUSACHEN_API_KEY) {
