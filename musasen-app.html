@@ -1088,8 +1088,8 @@ function renderTeamYears(){const el=document.getElementById('team-year-list');if
 // PLAYER MODAL
 function openPlayerModal(player){
   const rows=ARC_BATTING.filter(r=>r.name+'('+r.num+')'===player);
-  const pitRows=ARC_PITCHING.filter(r=>r.name+'('+r.num+')'===player);
-  if(!rows.length&&!pitRows.length)return;
+  const pitRowsCheck=ARC_PITCHING.filter(r=>r.name+'('+r.num+')'===player);
+  if(!rows.length&&!pitRowsCheck.length)return;
   const pmNum=(ARC_BATTING.find(r=>r.name+'('+r.num+')'===player)||{}).num;
   const pmPhoto=pmNum?getPlayerPhoto(pmNum):PLAYER_PHOTO_DEFAULT;
   document.getElementById('pm-name').innerHTML=`<img src="${pmPhoto}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;margin-right:12px;vertical-align:middle;">${player}`;
