@@ -1553,6 +1553,7 @@ async function resetApiKey() {
 
 function populateAgentPlayerSelect() {
   const sel = document.getElementById('agent-player-sel');
+  if (!sel) return;
   const current = sel.value;
   sel.innerHTML = '<option value="">── 選手を選択（個人分析）──</option>';
   MEMBERS.forEach(m => {
@@ -1717,6 +1718,16 @@ async function sendAgentMsg() {
   const inp = document.getElementById('agent-input');
   const text = inp.value.trim();
   if (!text || agentIsTyping) return;
+
+  // APIキーがない場合はSupabaseから再取得
+  if (!MUSACHEN_API_KEY) {
+    await loadApiKeyFromSupabase();
+  }
+  if (!MUSACHEN_API_KEY) {
+    addAgentMsg('bot', '⚠️ APIキーが設定されていません。管理者にお知らせください。');
+    return;
+  }
+
   inp.value = '';
   inp.style.height = 'auto';
   addAgentMsg('user', text);
