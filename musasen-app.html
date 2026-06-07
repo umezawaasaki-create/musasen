@@ -1810,7 +1810,6 @@ function formatAgentReply(text) {
 let agentLiveGames = null;
 
 async function fetchLiveGamesForAgent() {
-  if (agentLiveGames !== null) return agentLiveGames;
   try {
     const { data, error } = await sb.from('games').select('*').order('date', { ascending: false }).limit(20);
     if (error || !data) { agentLiveGames = []; return []; }
@@ -1838,28 +1837,50 @@ function formatLiveGameForAgent(g) {
       const b = half[o];
       if (!b || !b.name) continue;
       const results = b.results || {};
-      let h = 0, ab = 0, rbi = 0, hr = 0, bb = 0, sb = 0;
-      Object.values(results).forEach(r => {
-        if (!r || !r.type) return;
-        const t = r.type;
-        if (['H','二塁打','三塁打','本塁打'].includes(t)) { h++; ab++; }
-        else if (['凡打','三振'].includes(t)) { ab++; }
-        else if (['四球','死球'].includes(t)) { bb++; }
-        if (t === '本塁打') hr++;
-        if (t === '盗塁') sb++;
-        rbi += r.rbi || 0;
+      let h=0, ab=0, rbi=0, hr=0, double_=0, triple=0, bb=0, hbp=0, so=0, sac=0, sb=0, wp=0;
+      Object.values(results).forEach(inningResult => {
+        const arr = Array.isArray(inningResult) ? inningResult : [inningResult];
+        arr.forEach(r => {
+          if (!r || !r.type) return;
+          const t = r.type;
+          if (t === 'H')          { h++; ab++; }
+          else if (t === '二塁打') { h++; ab++; double_++; }
+          else if (t === '三塁打') { h++; ab++; triple++; }
+          else if (t === '本塁打') { h++; ab++; hr++; }
+          else if (t === '凡打')   { ab++; }
+          else if (t === '三振')   { ab++; so++; }
+          else if (t === '四球')   { bb++; }
+          else if (t === '死球')   { hbp++; }
+          else if (t === '犠打')   { sac++; }
+          else if (t === '盗塁')   { sb++; }
+          else if (t === '暴投')   { wp++; }
+          rbi += r.rbi || 0;
+        });
       });
-      entries.push(`${b.name}: ${h}安打/${ab}打数 打点${rbi}${hr>0?' HR'+hr:''}`);
+      if (ab > 0 || h > 0 || bb > 0 || hbp > 0 || sac > 0) {
+        const obp = (ab + bb + hbp + sac) > 0
+          ? ((h + bb + hbp) / (ab + bb + hbp + sac)).toFixed(3)
+          : '.000';
+        let detail = `${b.name}: ${h}安打(${double_>0?double_+'二塁打 ':''}${triple>0?triple+'三塁打 ':''}${hr>0?hr+'本塁打 ':''}単打${h-double_-triple-hr}本)/${ab}打数 打点${rbi} 出塁率${obp}`;
+        if (bb > 0) detail += ` 四球${bb}`;
+        if (hbp > 0) detail += ` 死球${hbp}`;
+        if (so > 0) detail += ` 三振${so}`;
+        if (sac > 0) detail += ` 犠打${sac}`;
+        if (sb > 0) detail += ` 盗塁${sb}`;
+        entries.push(detail);
+      }
     }
-    if (entries.length) batSummary = '\n  打撃: ' + entries.join(', ');
+    if (entries.length) batSummary = '\n  【打撃成績】\n  ' + entries.join('\n  ');
   }
 
   // 投手成績
   let pitSummary = '';
   if (g.pitchers && g.pitchers.my && g.pitchers.my.length) {
-    pitSummary = '\n  投手: ' + g.pitchers.my.map(p =>
-      `${p.name}(${p.innings || '?'}回 ${p.earnedRuns ?? '?'}失点 K${p.strikeouts ?? 0})`
-    ).join(', ');
+    const pitLines = g.pitchers.my.map(p => {
+      const ip = p.ip != null ? `${p.ip}回${p.ip3 ? p.ip3+'/3' : ''}` : '?回';
+      return `${p.name}: ${ip} 自責${p.er ?? '?'}点 失点${p.r ?? '?'}点 K${p.so ?? 0} BB${p.bb ?? 0} 被安打${p.h ?? '?'} 被HR${p.hr ?? 0} 死球${p.hbp ?? 0} 暴投${p.wp ?? 0} 結果:${p.result || '-'}`;
+    });
+    pitSummary = '\n  【投手成績】\n  ' + pitLines.join('\n  ');
   }
 
   return `【${g.date ? g.date.slice(0,10) : '日付不明'} vs ${g.opp || '相手不明'}】${status} ${my}-${opp} ${result}${batSummary}${pitSummary}`;
