@@ -503,8 +503,11 @@ async function saveGameToSupabase(g, silent=false){
     showSync(false);
   }
 }
+let isDirty = false; // 変更フラグ
+
 function scheduleSave(){
   if(!currentGame)return;
+  isDirty = true;
   clearTimeout(saveTimer);
   updateAutosaveIndicator();
   saveTimer=setTimeout(()=>saveCurrentGame(),1500);
@@ -804,12 +807,13 @@ function openGame(gameId){
   if(g.pitchers)pitchers=JSON.parse(JSON.stringify(g.pitchers));
   else pitchers={my:[],opp:[]};
   if(g.status==='upcoming'){g.status='inprogress';saveGameToSupabase(g, true);}
+  isDirty = false;
   showScreen('scoreinput');
   setTimeout(()=>{curHalf='top';document.getElementById('pitcher-assign-wrap').innerHTML='';renderBatters();showSubTab('bat');},50);
 }
 
 async function saveAndBack(){
-  if(currentGame){
+  if(currentGame && isDirty){
     currentGame.batters=JSON.parse(JSON.stringify(batters));
     currentGame.scores=JSON.parse(JSON.stringify(scores));
     currentGame.pitchers=JSON.parse(JSON.stringify(pitchers));
@@ -820,6 +824,7 @@ async function saveAndBack(){
     currentGame.finalScore={my,opp};
     await saveGameToSupabase(currentGame);
   }
+  isDirty = false;
   const _gid=document.getElementById('game-info-disp');if(_gid)_gid.textContent='';
   currentGame=null;
   await loadGames();
