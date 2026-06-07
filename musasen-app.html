@@ -385,7 +385,7 @@ body.agent-open{overflow:hidden;position:fixed;width:100%;}
 
   <!-- 下部ボタン -->
   <div style="padding:16px 14px 30px;display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--border);margin-top:10px;">
-    <button onclick="saveAndBack()" style="width:100%;padding:16px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:15px;font-weight:700;border-radius:14px;cursor:pointer;">一時保存して戻る</button>
+    <button onclick="saveAndBack()" style="width:100%;padding:16px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:15px;font-weight:700;border-radius:14px;cursor:pointer;">✕ 閉じる</button>
     <button onclick="confirmScore()" style="width:100%;padding:16px;background:var(--gold);border:none;color:#1a1a1a;font-family:'Noto Sans JP',sans-serif;font-size:15px;font-weight:900;border-radius:14px;cursor:pointer;">✅ スコア確定</button>
   </div>
 </div>
@@ -493,10 +493,10 @@ async function loadGames(){
     renderGameList();
   }
 }
-async function saveGameToSupabase(g){
+async function saveGameToSupabase(g, silent=false){
   try {
     const{error}=await sb.from('games').upsert({id:g.id,opp:g.opp,date:g.date,venue:g.venue,status:g.status,orders:g.orders||9,scores:g.scores,batters:g.batters,pinch_hitters:g.pinchHitters,pitchers:g.pitchers,final_score:g.finalScore,match_result:g.matchResult||null,updated_at:new Date().toISOString()});
-    if(!error)setAutosaveSaved();
+    if(!error && !silent) setAutosaveSaved();
     if(error)console.error('save error:',error.message,error);
   } catch(e) {
     console.error('saveGameToSupabase exception:',e);
@@ -512,7 +512,7 @@ function scheduleSave(){
 function updateAutosaveIndicator(){
   const el=document.getElementById('autosave-indicator');
   if(!el)return;
-  el.textContent='自動保存中';
+  el.textContent='保存中...';
 }
 function setAutosaveSaved(){
   const el=document.getElementById('autosave-indicator');
@@ -525,9 +525,9 @@ function updateAutosaveTime(){
   const el=document.getElementById('autosave-indicator');
   if(!el||!lastSavedAt)return;
   const diff=Math.floor((new Date()-lastSavedAt)/1000);
-  if(diff<60) el.textContent='自動保存中：たった今';
-  else if(diff<3600) el.textContent='自動保存中：'+Math.floor(diff/60)+'分前';
-  else el.textContent='自動保存中：'+Math.floor(diff/3600)+'時間前';
+  if(diff<60) el.textContent='保存済（たった今）';
+  else if(diff<3600) el.textContent='保存済（'+Math.floor(diff/60)+'分前）';
+  else el.textContent='保存済（'+Math.floor(diff/3600)+'時間前）';
 }
 setInterval(()=>{if(lastSavedAt)updateAutosaveTime();},30000);
 function saveCurrentGame(){if(!currentGame)return;currentGame.batters=JSON.parse(JSON.stringify(batters));currentGame.scores=JSON.parse(JSON.stringify(scores));currentGame.pitchers=JSON.parse(JSON.stringify(pitchers));currentGame.pinchHitters=JSON.parse(JSON.stringify(pinchHitters||{top:{},bot:{}}));currentGame.orders=ORDERS;let my=0,opp=0;for(let i=1;i<=INNINGS;i++){my+=scores[i].top||0;opp+=scores[i].bot||0;}currentGame.finalScore={my,opp};saveGameToSupabase(currentGame);}
@@ -803,7 +803,7 @@ function openGame(gameId){
   else{scores={};for(let i=1;i<=INNINGS;i++)scores[i]={top:0,bot:0};}
   if(g.pitchers)pitchers=JSON.parse(JSON.stringify(g.pitchers));
   else pitchers={my:[],opp:[]};
-  if(g.status==='upcoming'){g.status='inprogress';saveGameToSupabase(g);}
+  if(g.status==='upcoming'){g.status='inprogress';saveGameToSupabase(g, true);}
   showScreen('scoreinput');
   setTimeout(()=>{curHalf='top';document.getElementById('pitcher-assign-wrap').innerHTML='';renderBatters();showSubTab('bat');},50);
 }
