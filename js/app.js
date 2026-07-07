@@ -689,6 +689,40 @@ function getAllArchiveYears(){
   games.forEach(g=>{if(g.status==='done'){const y=gameYear(g);if(y)set.add(y);}});
   return[...set];
 }
+// 選手ごとの出場試合一覧(アプリでスコア入力した試合のみ。2023〜2026/05/23の
+// 静的アーカイブ期間は試合単位のデータが元々存在しないため対象外)
+function getPlayerGameLogs(player){
+  return liveArchiveGames().map(g=>{
+    const bat=collectGameBatting(g).find(r=>r.name+'('+r.num+')'===player);
+    const pit=collectGamePitching(g).find(r=>r.name+'('+r.num+')'===player);
+    if(!bat&&!pit)return null;
+    return{date:g.date,opp:g.opp,matchResult:g.matchResult,finalScore:g.finalScore,bat,pit};
+  }).filter(Boolean).sort((a,b)=>(b.date||'').replace(/\//g,'-').localeCompare((a.date||'').replace(/\//g,'-')));
+}
+function fmtBatLine(b){
+  const parts=[`${b.ab}打数${b.h}安打`];
+  if(b.d)parts.push(`二塁打${b.d}`);
+  if(b.t)parts.push(`三塁打${b.t}`);
+  if(b.hr)parts.push(`本塁打${b.hr}`);
+  if(b.rbi)parts.push(`打点${b.rbi}`);
+  if(b.bb)parts.push(`四球${b.bb}`);
+  if(b.hbp)parts.push(`死球${b.hbp}`);
+  if(b.so)parts.push(`三振${b.so}`);
+  if(b.sb)parts.push(`盗塁${b.sb}`);
+  return parts.join('・');
+}
+function fmtPitLine(p){
+  const parts=[`${Math.floor(p.thirds/3)}.${p.thirds%3}回`];
+  if(p.er)parts.push(`自責${p.er}`);
+  if(p.so)parts.push(`奪三振${p.so}`);
+  if(p.bb)parts.push(`与四球${p.bb}`);
+  if(p.h)parts.push(`被安打${p.h}`);
+  if(p.hr)parts.push(`被本塁打${p.hr}`);
+  if(p.w)parts.push('勝');
+  if(p.l)parts.push('負');
+  if(p.sv)parts.push('セーブ');
+  return parts.join('・');
+}
 // ARCHIVE RANKING
 const RANK_CATS=[{key:'_pitcher',label:'投手',fmt:v=>v,unit:'',color:'normal-val',minAb:0},
   {key:'avg',label:'打率',fmt:v=>v.toFixed(3).replace('0.','.'),unit:'',color:'gold-val',minAb:5},{key:'games',label:'試合数',fmt:v=>v,unit:'試合',color:'normal-val',minAb:0},{key:'h',label:'安打',fmt:v=>v,unit:'本',color:'normal-val',minAb:0},{key:'d',label:'二塁打',fmt:v=>v,unit:'本',color:'normal-val',minAb:0},{key:'t',label:'三塁打',fmt:v=>v,unit:'本',color:'normal-val',minAb:0},{key:'hr',label:'本塁打',fmt:v=>v,unit:'本',color:'normal-val',minAb:0},{key:'rbi',label:'打点',fmt:v=>v,unit:'点',color:'normal-val',minAb:0},{key:'bb',label:'四球',fmt:v=>v,unit:'個',color:'normal-val',minAb:0},{key:'hbp',label:'死球',fmt:v=>v,unit:'個',color:'normal-val',minAb:0},{key:'so',label:'三振',fmt:v=>v,unit:'個',color:'normal-val',minAb:0},{key:'sb',label:'盗塁',fmt:v=>v,unit:'個',color:'normal-val',minAb:0},{key:'ops',label:'OPS',fmt:v=>v.toFixed(3),unit:'',color:'gold-val',minAb:5}];
@@ -738,6 +772,25 @@ function openPlayerModal(player){
   html+='</tbody></table></div>';
   const pitRows=ARC_PITCHING_LIVE.filter(r=>r.name+'('+r.num+')'===player);
   if(pitRows.length>0){const pt=pitRows.reduce((a,r)=>({games:a.games+r.games,ip:a.ip+r.ip*3+r.ip3,w:a.w+r.w,l:a.l+r.l,sv:a.sv+r.sv,er:a.er+r.er,so:a.so+r.so,bb:a.bb+r.bb}),{games:0,ip:0,w:0,l:0,sv:0,er:0,so:0,bb:0});const pera=pt.ip>0?((pt.er*27)/pt.ip).toFixed(2):'---';const ec=parseFloat(pera)<5?'var(--gb)':parseFloat(pera)<8?'var(--gold)':'var(--rb)';html+=`<div style="font-size:13px;color:var(--dim);font-weight:700;margin-bottom:10px;">投手通算成績</div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px;"><div class="cc-stat"><div class="cc-val" style="color:${ec};">${pera}</div><div class="cc-lbl">防御率</div></div><div class="cc-stat"><div class="cc-val">${pt.w}勝${pt.l}敗</div><div class="cc-lbl">勝敗</div></div><div class="cc-stat"><div class="cc-val" style="color:var(--gb);">${pt.so}</div><div class="cc-lbl">奪三振</div></div><div class="cc-stat"><div class="cc-val" style="color:var(--blue);">${pt.bb}</div><div class="cc-lbl">与四球</div></div></div>`;}
+  const gameLogs=getPlayerGameLogs(player);
+  if(gameLogs.length>0){
+    html+=`<div style="font-size:13px;color:var(--dim);font-weight:700;margin:14px 0 10px;">出場試合（アプリ記録分・${gameLogs.length}試合）</div>`;
+    html+='<div style="display:flex;flex-direction:column;gap:8px;">';
+    gameLogs.forEach(g=>{
+      const rc=g.matchResult==='勝'?'var(--gold)':g.matchResult==='負'?'var(--rb)':'var(--dim)';
+      const dateDisp=(g.date||'').replace(/-/g,'/').slice(0,10);
+      const score=g.finalScore?`${g.finalScore.my}-${g.finalScore.opp}`:'';
+      html+=`<div style="background:var(--surface2);border-radius:10px;padding:10px 12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+          <div style="font-size:12px;color:var(--dim);">${dateDisp} vs ${g.opp}</div>
+          <div style="font-size:12px;font-weight:900;color:${rc};">${g.matchResult||''} ${score}</div>
+        </div>
+        ${g.bat?`<div style="font-size:12px;">打撃: ${fmtBatLine(g.bat)}</div>`:''}
+        ${g.pit?`<div style="font-size:12px;margin-top:2px;">投手: ${fmtPitLine(g.pit)}</div>`:''}
+      </div>`;
+    });
+    html+='</div>';
+  }
   document.getElementById('pm-content').innerHTML=html;
   document.getElementById('player-modal').classList.add('open');
 }
