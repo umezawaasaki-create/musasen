@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>⚾ ムサセンスコア</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=4">
+<link rel="stylesheet" href="css/style.css?v=5">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 </head>
@@ -53,6 +53,7 @@
   <div style="padding:16px 14px 30px;display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--border);margin-top:10px;">
     <button onclick="saveAndBack()" style="width:100%;padding:16px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:15px;font-weight:700;border-radius:14px;cursor:pointer;">✕ 閉じる</button>
     <button onclick="confirmScore()" style="width:100%;padding:16px;background:var(--gold);border:none;color:#1a1a1a;font-family:'Noto Sans JP',sans-serif;font-size:15px;font-weight:900;border-radius:14px;cursor:pointer;">✅ スコア確定</button>
+    <button onclick="deleteCurrentGame()" style="width:100%;padding:16px;background:var(--red);border:none;color:#fff;font-family:'Noto Sans JP',sans-serif;font-size:15px;font-weight:900;border-radius:14px;cursor:pointer;">試合を削除</button>
   </div>
 </div>
 <!-- アーカイブ -->
@@ -138,10 +139,10 @@
     <button class="btn-ng-cancel" onclick="closeNewGame()">キャンセル</button>
   </div>
 </div>
-<script src="js/config.js?v=4"></script>
-<script src="data/roster.js?v=4"></script>
-<script src="data/history.js?v=4"></script>
-<script src="js/app.js?v=4"></script>
+<script src="js/config.js?v=5"></script>
+<script src="data/roster.js?v=5"></script>
+<script src="data/history.js?v=5"></script>
+<script src="js/app.js?v=5"></script>
 
 <!-- ===== AI AGENT ===== -->
 <!-- フローティングボタン -->
@@ -175,7 +176,7 @@
   </div>
 </div>
 
-<script src="js/agent.js?v=4"></script>
+<script src="js/agent.js?v=5"></script>
 
 </body>
 </html>

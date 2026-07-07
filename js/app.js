@@ -233,6 +233,22 @@ async function confirmScore(){
   window.scrollTo({top:0,behavior:'instant'});
 }
 
+async function deleteCurrentGame(){
+  if(!currentGame)return;
+  const label='vs '+(currentGame.opp||'相手')+'（'+(currentGame.date||'日時未定')+'）';
+  if(!confirm(label+'\nこの試合を削除します。よろしいですか？\nこの操作は取り消せません。'))return;
+  try{
+    const{error}=await sb.from('games').delete().eq('id',currentGame.id);
+    if(error){console.error('deleteCurrentGame error:',error.message,error);alert('削除に失敗しました。通信環境を確認してもう一度お試しください。');return;}
+  }catch(e){console.error('deleteCurrentGame exception:',e);alert('削除に失敗しました。通信環境を確認してもう一度お試しください。');return;}
+  isDirty=false;
+  const _gid=document.getElementById('game-info-disp');if(_gid)_gid.textContent='';
+  currentGame=null;
+  await loadGames();
+  showScreen('score');
+  window.scrollTo({top:0,behavior:'instant'});
+}
+
 async function backToGameList(){
   saveCurrentGame();
   const _gid=document.getElementById('game-info-disp');if(_gid)_gid.textContent='';
