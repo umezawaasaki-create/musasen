@@ -63,21 +63,21 @@ const ARC_BATTING=[
   {name:'みや',num:7,year:2025,games:1,ab:2,h:0,d:0,t:0,hr:0,rbi:1,sb:0,bb:1,hbp:0,so:1,avg:.000,slg:.000,obp:.333,ops:.333},
   {name:'しんぺい',num:23,year:2025,games:1,ab:3,h:0,d:0,t:0,hr:0,rbi:0,sb:0,bb:0,hbp:2,so:1,avg:.000,slg:.000,obp:.000,ops:.000},
   // 2026年 規定打席以上
-  {name:'大住',num:31,year:2026,games:6,ab:15,h:6,d:2,t:0,hr:1,rbi:3,sb:5,bb:3,hbp:1,so:1,avg:.400,slg:.733,obp:.526,ops:1.260},
+  {name:'大住',num:31,year:2026,games:6,ab:16,h:6,d:2,t:0,hr:1,rbi:3,sb:5,bb:3,hbp:1,so:1,avg:.375,slg:.688,obp:.500,ops:1.188},
   {name:'青木',num:18,year:2026,games:6,ab:15,h:6,d:0,t:0,hr:0,rbi:1,sb:0,bb:1,hbp:0,so:1,avg:.400,slg:.400,obp:.438,ops:.838},
   {name:'竹林',num:14,year:2026,games:6,ab:14,h:4,d:1,t:0,hr:1,rbi:6,sb:3,bb:4,hbp:0,so:2,avg:.286,slg:.571,obp:.444,ops:1.016},
   {name:'ソク',num:11,year:2026,games:6,ab:14,h:3,d:2,t:0,hr:0,rbi:3,sb:0,bb:2,hbp:0,so:2,avg:.214,slg:.357,obp:.313,ops:.670},
-  {name:'ガク',num:45,year:2026,games:6,ab:14,h:3,d:2,t:0,hr:0,rbi:0,sb:2,bb:0,hbp:1,so:4,avg:.214,slg:.357,obp:.267,ops:.624},
-  {name:'うすい',num:9,year:2026,games:5,ab:11,h:2,d:0,t:0,hr:0,rbi:0,sb:3,bb:2,hbp:1,so:1,avg:.182,slg:.182,obp:.357,ops:.539},
-  {name:'梅澤',num:10,year:2026,games:5,ab:11,h:1,d:0,t:0,hr:0,rbi:0,sb:0,bb:4,hbp:0,so:0,avg:.091,slg:.091,obp:.333,ops:.424},
+  {name:'ガク',num:45,year:2026,games:6,ab:14,h:3,d:2,t:0,hr:0,rbi:1,sb:0,bb:0,hbp:1,so:4,avg:.214,slg:.357,obp:.267,ops:.624},
+  {name:'うすい',num:9,year:2026,games:5,ab:11,h:2,d:0,t:0,hr:0,rbi:3,sb:0,bb:2,hbp:1,so:1,avg:.182,slg:.182,obp:.357,ops:.539},
+  {name:'梅澤',num:10,year:2026,games:5,ab:11,h:1,d:0,t:0,hr:0,rbi:2,sb:0,bb:4,hbp:0,so:0,avg:.091,slg:.091,obp:.333,ops:.424},
   // 2026年 規定打席未満
   {name:'笹野',num:25,year:2026,games:2,ab:3,h:1,d:0,t:0,hr:0,rbi:0,sb:0,bb:2,hbp:0,so:0,avg:.333,slg:.333,obp:.600,ops:.933},
   {name:'貢司',num:77,year:2026,games:2,ab:4,h:1,d:0,t:0,hr:0,rbi:0,sb:0,bb:1,hbp:0,so:2,avg:.250,slg:.250,obp:.400,ops:.650},
   {name:'しんぺい',num:23,year:2026,games:2,ab:5,h:1,d:0,t:0,hr:0,rbi:0,sb:0,bb:0,hbp:0,so:1,avg:.200,slg:.200,obp:.200,ops:.400},
   {name:'村野',num:55,year:2026,games:4,ab:7,h:1,d:1,t:0,hr:0,rbi:0,sb:2,bb:3,hbp:1,so:1,avg:.143,slg:.286,obp:.455,ops:.740},
-  {name:'安倍',num:13,year:2026,games:4,ab:9,h:1,d:0,t:0,hr:0,rbi:0,sb:1,bb:1,hbp:0,so:4,avg:.111,slg:.111,obp:.200,ops:.311},
+  {name:'安倍',num:13,year:2026,games:4,ab:9,h:1,d:0,t:0,hr:0,rbi:0,sb:0,bb:1,hbp:0,so:4,avg:.111,slg:.111,obp:.200,ops:.311},
   {name:'梶原',num:24,year:2026,games:1,ab:3,h:0,d:0,t:0,hr:0,rbi:0,sb:0,bb:0,hbp:0,so:0,avg:.000,slg:.000,obp:.000,ops:.000},
-  {name:'太田',num:6,year:2026,games:1,ab:2,h:0,d:0,t:0,hr:0,rbi:0,sb:0,bb:1,hbp:0,so:0,avg:.000,slg:.000,obp:.333,ops:.333},
+  {name:'太田',num:6,year:2026,games:1,ab:2,h:0,d:0,t:0,hr:0,rbi:0,sb:0,bb:1,hbp:0,so:1,avg:.000,slg:.000,obp:.333,ops:.333},
   {name:'前田',num:12,year:2026,games:2,ab:2,h:0,d:0,t:0,hr:0,rbi:1,sb:1,bb:2,hbp:0,so:0,avg:.000,slg:.000,obp:.400,ops:.400},
 ];
 const ARC_PITCHING=[
