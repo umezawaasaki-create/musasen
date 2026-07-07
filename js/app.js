@@ -792,9 +792,31 @@ function openPlayerModal(player){
     html+='</div>';
   }
   document.getElementById('pm-content').innerHTML=html;
+  lockBodyScroll();
   document.getElementById('player-modal').classList.add('open');
 }
-function closePlayerModal(e){if(!e||e.target===document.getElementById('player-modal'))document.getElementById('player-modal').classList.remove('open');}
+function closePlayerModal(e){
+  if(!e||e.target===document.getElementById('player-modal')){
+    document.getElementById('player-modal').classList.remove('open');
+    unlockBodyScroll();
+  }
+}
+// 背景スクロール固定（モーダル表示中、後ろの画面が一緒にスクロールされるのを防ぐ）
+let modalScrollY=0;
+function lockBodyScroll(){
+  modalScrollY=window.scrollY||window.pageYOffset||0;
+  document.body.style.position='fixed';
+  document.body.style.top=(-modalScrollY)+'px';
+  document.body.style.width='100%';
+  document.body.classList.add('modal-open');
+}
+function unlockBodyScroll(){
+  document.body.classList.remove('modal-open');
+  document.body.style.position='';
+  document.body.style.top='';
+  document.body.style.width='';
+  window.scrollTo(0,modalScrollY);
+}
 // RESULTS
 let resYear='all';
 function initResults(){
