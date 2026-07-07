@@ -138,7 +138,8 @@ function formatUpdatedAt(iso){
 function renderGameList(){
   const el=document.getElementById('gamelist-all');
   if(!el) return;
-  const sorted=[...games].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const norm=d=>(d||'').replace(/\//g,'-');
+  const sorted=[...games].sort((a,b)=>norm(b.date).localeCompare(norm(a.date)));
   const upcoming=sorted.filter(g=>g.status!=='done');
   const done=sorted.filter(g=>g.status==='done');
   let html='';
@@ -153,9 +154,11 @@ function gameCard(g){
   let rightHtml='';
   if(g.status==='done'&&g.finalScore){
     const isWin=g.matchResult==='勝';
-    const scoreColor=isWin?'var(--gold)':'var(--rb)';
+    const isDraw=g.matchResult==='分';
+    const scoreColor=isWin?'var(--gold)':isDraw?'var(--dim)':'var(--rb)';
+    const label=isWin?'WIN':isDraw?'DRAW':'LOSE';
     rightHtml=`<div style="font-family:'Bebas Neue',cursive;font-size:28px;color:${scoreColor};line-height:1;">${g.finalScore.my}-${g.finalScore.opp}</div>
-      <div style="font-size:11px;font-weight:700;color:${scoreColor};">${isWin?'WIN':'LOSE'}</div>`;
+      <div style="font-size:11px;font-weight:700;color:${scoreColor};">${label}</div>`;
   }
   return`<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:14px;" onclick="openGame('${g.id}')">
     <div style="flex:1;min-width:0;"><div style="font-size:17px;font-weight:700;margin-bottom:3px;">vs ${g.opp}</div><div style="font-size:12px;color:var(--dim);margin-bottom:3px;">${g.date}</div><div style="font-size:11px;color:var(--dimmer);">${g.venue}</div></div>
@@ -860,20 +863,31 @@ function renderResults(){
       const yg=all.filter(r=>(r.year||parseInt((r.date||'').slice(0,4)))===curYear);
       const wins=yg.filter(r=>r.result==='勝').length;
       const loses=yg.filter(r=>r.result==='負').length;
-      const total=wins+loses;
+      const draws=yg.filter(r=>r.result==='分').length;
+      const decided=wins+loses;
+      const total=wins+loses+draws;
       html+=`<div class="game-season-header">${curYear}年シーズン</div>
       <div class="season-summary">
         <div class="ss-item"><div class="ss-val" style="color:var(--gold);">${wins}</div><div class="ss-lbl">勝利</div></div>
         <div class="ss-item"><div class="ss-val" style="color:var(--rb);">${loses}</div><div class="ss-lbl">敗北</div></div>
         <div class="ss-item"><div class="ss-val">${total}</div><div class="ss-lbl">試合</div></div>
-        <div class="ss-item"><div class="ss-val" style="color:${wins>=loses?'var(--gold)':'var(--rb)'};">${total>0?Math.round(wins/total*100):0}%</div><div class="ss-lbl">勝率</div></div>
+        <div class="ss-item"><div class="ss-val" style="color:${wins>=loses?'var(--gold)':'var(--rb)'};">${decided>0?Math.round(wins/decided*100):0}%</div><div class="ss-lbl">勝率</div></div>
       </div>`;
     }
     const isWin=g.result==='勝';
+    const isDraw=g.result==='分';
     const oi=getTeamInitial(g.opp);
     const myScore=g.my!==undefined?g.my:g.my;
     const oppScore=g.opp_score!==undefined?g.opp_score:(g.opp_score||0);
-    html+=`<div class="game-card ${isWin?'win':'lose'}">
+    const cardCls=isWin?'win':isDraw?'':'lose';
+    const cardStyle=isDraw?' style="border-top:3px solid var(--dim);"':'';
+    const scoreCls=isWin?'win-score':isDraw?'':'lose-score';
+    const scoreStyle=isDraw?' style="color:var(--dim);"':'';
+    const badgeCls=isWin?'badge-win':isDraw?'':'badge-lose';
+    const badgeStyle=isDraw?' style="background:rgba(176,160,128,.2);color:var(--dim);"':'';
+    const badgeLabel=isWin?'WIN':isDraw?'DRAW':'LOSE';
+    const logoCls=isWin?'win-logo':isDraw?'':'lose-logo';
+    html+=`<div class="game-card ${cardCls}"${cardStyle}>
       <div class="game-meta">
         <div class="game-date">${g.date||''}</div>
         ${g.round?`<div class="game-round">第${g.round}回戦</div>`:''}
@@ -881,10 +895,10 @@ function renderResults(){
       <div class="game-row">
         <div class="game-team"><div class="game-team-logo my-logo">M</div><div class="game-team-name my-name">自チーム</div></div>
         <div class="game-score-center">
-          <div class="game-score-nums"><span class="score-my ${isWin?'win-score':'lose-score'}">${myScore}</span><span class="score-sep">-</span><span class="score-opp">${oppScore}</span></div>
-          <span class="game-result-badge ${isWin?'badge-win':'badge-lose'}">${isWin?'WIN':'LOSE'}</span>
+          <div class="game-score-nums"><span class="score-my ${scoreCls}"${scoreStyle}>${myScore}</span><span class="score-sep">-</span><span class="score-opp">${oppScore}</span></div>
+          <span class="game-result-badge ${badgeCls}"${badgeStyle}>${badgeLabel}</span>
         </div>
-        <div class="game-team"><div class="game-team-logo ${isWin?'win-logo':'lose-logo'}">${oi}</div><div class="game-team-name">${g.opp}</div></div>
+        <div class="game-team"><div class="game-team-logo ${logoCls}">${oi}</div><div class="game-team-name">${g.opp}</div></div>
       </div>
       <div class="game-venue">${g.venue||''}</div>
     </div>`;

@@ -136,10 +136,5 @@ const GAME_RESULTS=[
 {year:2025,round:5,date:'2025/07/19',opp:'チームボアンカレ',my:5,opp_score:3,result:'勝',venue:'渋谷区二子玉川野球場'},
 {year:2025,round:6,date:'2025/09/20',opp:'Pithecan All Stars',my:10,opp_score:3,result:'負',venue:'駒沢公園軟式野球場A面'},
 {year:2025,round:7,date:'2025/10/04',opp:'MKI Baseball Club',my:1,opp_score:10,result:'勝',venue:'駒沢公園軟式野球場A面'},
-{year:2025,round:8,date:'2025/10/18',opp:'琉球システマ',my:3,opp_score:2,result:'勝',venue:'駒沢公園軟式野球場A面'},
-{year:2026,round:1,date:'2026/02/07',opp:'東京桐蔭',my:11,opp_score:0,result:'負',venue:'青山運動場野球場'},
-{year:2026,round:2,date:'2026/03/07',opp:'Pithecan All Stars',my:6,opp_score:4,result:'負',venue:'多摩川ガス橋緑地球技場6号面'},
-{year:2026,round:3,date:'2026/03/14',opp:'琉球システマ',my:4,opp_score:5,result:'勝',venue:'羽根木公園野球場'},
-{year:2026,round:4,date:'2026/04/04',opp:'NRCフレンドリィズ',my:5,opp_score:7,result:'勝',venue:'多摩川ガス橋緑地球技場8号面'},
-{year:2026,round:5,date:'2026/04/18',opp:'Yellow Wolves',my:2,opp_score:3,result:'勝',venue:'駒沢公園軟式野球場A面'},
-{year:2026,round:6,date:'2026/05/23',opp:'Meerkats',my:3,opp_score:4,result:'勝',venue:'駒沢公園軟式野球場A面'}];
+{year:2025,round:8,date:'2025/10/18',opp:'琉球システマ',my:3,opp_score:2,result:'勝',venue:'駒沢公園軟式野球場A面'}];
+// 2026年の試合結果はすべてSupabaseのgamesテーブルに移行済み(スコア入力画面で確認・編集可能)
