@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>⚾ ムサセンスコア</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+</head>
+<body>
+<div class="g-hdr" id="main-hdr">
+  <!-- ヘッダー：常にナビタブ表示 -->
+  <div id="hdr-normal" style="display:flex;align-items:center;width:100%;gap:0;">
+    <img src="logo.jpg" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;margin-right:8px;">
+    <button class="hdr-nav-btn active" id="hnav-score" onclick="showScreen('score')">スコア入力</button>
+    <button class="hdr-nav-btn" id="hnav-archive" onclick="showScreen('archive')">通算成績</button>
+  </div>
+  <div id="hdr-scoreinput" style="display:none;align-items:center;width:100%;gap:8px;min-height:40px;">
+    <div id="game-info-disp" style="flex:1;font-size:18px;font-weight:900;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
+    <div class="autosave-indicator" id="autosave-indicator">自動保存中</div>
+  </div>
+  <div id="game-info-disp" style="display:none;"></div>
+</div>
+<!-- 試合リスト -->
+<div id="screen-score" class="screen active">
+  <div class="gamelist-wrap">
+    <button class="btn-new-game" onclick="openNewGame()">＋ 試合を作成</button>
+    <div id="gamelist-all"></div>
+  </div>
+</div>
+<!-- スコア入力 -->
+<div id="screen-scoreinput" class="screen">
+  <div class="sub-tabs" style="justify-content:flex-start;gap:0;">
+    <div class="sub-tab" onclick="showSubTab('score')" style="flex:1;">点数</div>
+    <div class="sub-tab active" onclick="showSubTab('bat')" style="flex:1;">投打成績</div>
+  </div>
+  <!-- 点数入力タブ -->
+  <div id="subtab-score" style="display:none;">
+    <div id="score-input-wrap" style="padding:14px 12px;"></div>
+  </div>
+  <div id="subtab-bat">
+    <div class="half-bar">
+      <button class="half-btn active" id="h-top" onclick="setHalf('top')">攻撃</button>
+      <button class="half-btn" id="h-bot" onclick="setHalf('bot')">投手/守備</button>
+    </div>
+    <div id="pitcher-assign-wrap"></div>
+    <div id="bat-list"></div>
+  </div>
+
+  <!-- 下部ボタン -->
+  <div style="padding:16px 14px 30px;display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--border);margin-top:10px;">
+    <button onclick="saveAndBack()" style="width:100%;padding:16px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Noto Sans JP',sans-serif;font-size:15px;font-weight:700;border-radius:14px;cursor:pointer;">✕ 閉じる</button>
+    <button onclick="confirmScore()" style="width:100%;padding:16px;background:var(--gold);border:none;color:#1a1a1a;font-family:'Noto Sans JP',sans-serif;font-size:15px;font-weight:900;border-radius:14px;cursor:pointer;">✅ スコア確定</button>
+  </div>
+</div>
+<!-- アーカイブ -->
+<div id="screen-archive" class="screen">
+  <div class="arc-content">
+    <div class="arc-mode-bar">
+      <button class="arc-mode-btn active" id="arcbtn-ranking" onclick="showArcMode('ranking')">ランキング</button>
+      <button class="arc-mode-btn" id="arcbtn-team" onclick="showArcMode('team')">チーム成績</button>
+      <button class="arc-mode-btn" id="arcbtn-results" onclick="showArcMode('results')">対戦結果</button>
+    </div>
+    <div id="arc-ranking">
+      <div class="rank-cat-bar" id="rank-cat-bar"></div>
+      <div class="year-bar" id="rank-year-bar"></div>
+      <div class="rank-title" id="rank-title" style="display:none;"></div>
+      <div class="rank-list" id="rank-list"></div>
+    </div>
+    <div id="arc-team" style="display:none;"><div class="a-sec">チーム年度別成績</div><div id="team-year-list"></div></div>
+    <div id="arc-results" style="display:none;"><div class="res-yr-bar" id="res-yr-bar"></div><div id="results-list"></div></div>
+  </div>
+</div>
+<!-- 選手詳細モーダル -->
+<div class="overlay" id="player-modal" onclick="closePlayerModal(event)">
+  <div class="sheet" onclick="event.stopPropagation()" style="max-height:85vh;overflow-y:auto;border-radius:20px 20px 0 0;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div id="pm-name" style="font-size:20px;font-weight:900;color:var(--gold);"></div>
+      <button onclick="closePlayerModal()" style="background:none;border:none;color:var(--dim);font-size:24px;cursor:pointer;">✕</button>
+    </div>
+    <div id="pm-content"></div>
+  </div>
+</div>
+
+<!-- 打撃結果モーダル -->
+<div class="overlay" id="res-modal" onclick="closeModal(event)">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-title" id="modal-sub"></div>
+    <div class="sheet-player" id="modal-player"></div>
+    <div class="res-grid">
+      <div class="ro ro-hit" onclick="pickRes('H')"><div class="rl" style="font-size:22px;font-weight:900;">単打</div></div>
+      <div class="ro ro-2b" onclick="pickRes('二塁打')"><div class="rl" style="font-size:22px;font-weight:900;">二塁打</div></div>
+      <div class="ro ro-3b" onclick="pickRes('三塁打')"><div class="rl" style="font-size:22px;font-weight:900;">三塁打</div></div>
+      <div class="ro ro-hr" onclick="pickRes('本塁打')"><div class="rl" style="font-size:22px;font-weight:900;">本塁打</div></div>
+      <div class="ro ro-out" onclick="pickRes('凡打')"><div class="rl" style="font-size:22px;font-weight:900;">凡打</div></div>
+      <div class="ro ro-k" onclick="pickRes('三振')"><div class="rl" style="font-size:22px;font-weight:900;">三振</div></div>
+      <div class="ro ro-bb" onclick="pickRes('四球')"><div class="rl" style="font-size:22px;font-weight:900;">四球</div></div>
+      <div class="ro ro-hbp" onclick="pickRes('死球')"><div class="rl" style="font-size:22px;font-weight:900;">死球</div></div>
+      <div class="ro ro-bb" onclick="pickRes('犠打')"><div class="rl" style="font-size:22px;font-weight:900;">犠打</div></div>
+      <div class="ro ro-green" onclick="pickRes('盗塁')"><div class="rl" style="font-size:22px;font-weight:900;">盗塁</div></div>
+      <div class="ro ro-green" onclick="pickRes('暴投')"><div class="rl" style="font-size:22px;font-weight:900;">暴投</div></div>
+    </div>
+    <div class="detail-row"><label>詳細(任意)</label><input class="detail-inp" id="res-detail" type="text" placeholder="例: 左飛, 三ゴ"></div>
+    <div class="rbi-row"><label>打点 (RBI)</label><div class="rbi-counter"><button class="rbi-btn" onclick="chgRbi(-1)">−</button><span class="rbi-num" id="rbi-disp">0</span><button class="rbi-btn" onclick="chgRbi(1)">＋</button></div></div>
+    <button class="btn-clear" onclick="clearRes()">この打席をクリア</button>
+  </div>
+</div>
+<!-- サマリーモーダル -->
+<div class="sum-overlay" id="sum-modal">
+  <div class="sum-sheet">
+    <div class="sum-hdr"><h2>📋 転記用まとめ</h2><button class="btn-close-sum" onclick="closeSummary()">✕ 閉じる</button></div>
+    <p style="font-size:11px;color:var(--dim);margin-bottom:10px;">管理画面の入力項目に合わせています。</p>
+    <div id="sum-content"></div>
+    <div style="position:sticky;bottom:0;background:var(--surface);padding:10px 0 14px;border-top:1px solid var(--border);margin-top:8px;">
+      <button id="btn-send-sheets" onclick="sendToSheets()" class="btn-send">📤 スプレッドシートに記録</button>
+    </div>
+  </div>
+</div>
+<!-- 数字入力モーダル -->
+<div class="num-modal" id="num-modal" onclick="closeNumModal(event)">
+  <div class="num-sheet" onclick="event.stopPropagation()">
+    <div class="num-title" id="num-title">点数を選択</div>
+    <div class="num-grid" id="num-grid"></div>
+    <button class="num-cancel" onclick="closeNumModal()">キャンセル</button>
+  </div>
+</div>
+
+<!-- 新規試合モーダル -->
+<div class="newgame-overlay" id="newgame-modal" onclick="closeNewGame(event)">
+  <div class="newgame-sheet" onclick="event.stopPropagation()">
+    <h3>⚾ 試合を作成</h3>
+    <div class="ng-field"><label>対戦相手チーム名</label><input id="ng-opp" type="text" placeholder="例：琉球システマ"></div>
+    <div class="ng-field"><label>試合日時</label><input id="ng-date" type="datetime-local"></div>
+    <div class="ng-field"><label>球場・場所</label><input id="ng-venue" type="text" placeholder="例：駒沢公園軟式野球場A面"></div>
+    <button class="btn-ng-create" onclick="createGame()">作成する</button>
+    <button class="btn-ng-cancel" onclick="closeNewGame()">キャンセル</button>
+  </div>
+</div>
+<script src="js/config.js"></script>
+<script src="data/roster.js"></script>
+<script src="data/history.js"></script>
+<script src="js/app.js"></script>
+
+<!-- ===== AI AGENT ===== -->
+<!-- フローティングボタン -->
+<button class="agent-fab" onclick="openAgent()" id="agent-fab">
+  <img src="logo.jpg" style="width:46px;height:46px;border-radius:50%;object-fit:cover;">
+  <span class="agent-fab-label">ムーサン</span>
+</button>
+
+<!-- エージェントウィンドウ -->
+<div class="agent-window" id="agent-window">
+  <div class="agent-header">
+    <div class="agent-avatar" style="background:none;padding:0;overflow:hidden;">
+      <img src="logo.jpg" style="width:48px;height:48px;border-radius:50%;object-fit:cover;">
+    </div>
+    <div class="agent-header-info">
+      <div class="agent-header-name">ムーサン</div>
+      <div class="agent-header-status">
+        <span class="agent-status-dot"></span>
+        チームアナリスト・常時分析中
+      </div>
+    </div>
+    <button class="agent-close" onclick="closeAgent()">✕ 閉じる</button>
+  </div>
+
+  <div class="agent-messages" id="agent-messages"></div>
+
+  <div class="agent-input-wrap">
+    <textarea class="agent-input" id="agent-input" placeholder="質問や相談を入力..." rows="1"
+      onkeydown="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"></textarea>
+    <button class="agent-send" onclick="sendAgentMsg()">➤</button>
+  </div>
+</div>
+
+<script src="js/agent.js"></script>
+
+</body>
+</html>
