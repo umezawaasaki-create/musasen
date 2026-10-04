@@ -5,26 +5,31 @@ async function loadGames(){
   try {
     console.log('loadGames: connecting to Supabase...');
     const{data,error}=await sb.from('games').select('*').order('date',{ascending:false});
-    if(error){console.error('Supabase error:',error.message,error);showSync(false);renderGameList();return;}
+    if(error){console.error('Supabase error:',error.message,error);loadFailed=true;renderGameList();return;}
+    loadFailed=false;
     console.log('loadGames: got',data?data.length:0,'rows');
     games=data.map(r=>({id:r.id,opp:r.opp,date:r.date,venue:r.venue,status:r.status,orders:r.orders||9,scores:r.scores,batters:r.batters,pinchHitters:r.pinch_hitters,pitchers:r.pitchers,finalScore:r.final_score,matchResult:r.match_result,updatedAt:r.updated_at}));
     console.log('loadGames: games=',games.length);
     renderGameList();
   } catch(e) {
     console.error('loadGames exception:',e.message,e);
+    loadFailed=true;
     renderGameList();
   }
 }
 async function saveGameToSupabase(g, silent=false){
   try {
     const{error}=await sb.from('games').upsert({id:g.id,opp:g.opp,date:g.date,venue:g.venue,status:g.status,orders:g.orders||9,scores:g.scores,batters:g.batters,pinch_hitters:g.pinchHitters,pitchers:g.pitchers,final_score:g.finalScore,match_result:g.matchResult||null,updated_at:new Date().toISOString()});
-    if(!error && !silent) setAutosaveSaved();
-    if(error)console.error('save error:',error.message,error);
+    if(error){console.error('save error:',error.message,error);setAutosaveFailed();return false;}
+    if(!silent) setAutosaveSaved();
+    return true;
   } catch(e) {
     console.error('saveGameToSupabase exception:',e);
-    showSync(false);
+    setAutosaveFailed();
+    return false;
   }
 }
+let loadFailed=false;
 let isDirty = false; // 変更フラグ
 
 function scheduleSave(){
@@ -39,9 +44,17 @@ function updateAutosaveIndicator(){
   if(!el)return;
   el.textContent='保存中...';
 }
+function setAutosaveFailed(){
+  const el=document.getElementById('autosave-indicator');
+  if(!el)return;
+  lastSavedAt=null;
+  el.textContent='⚠ 保存失敗';
+  el.classList.add('failed');
+}
 function setAutosaveSaved(){
   const el=document.getElementById('autosave-indicator');
   if(!el)return;
+  el.classList.remove('failed');
   lastSavedAt=new Date();
   updateAutosaveTime();
 }
@@ -143,6 +156,7 @@ function renderGameList(){
   const upcoming=sorted.filter(g=>g.status!=='done');
   const done=sorted.filter(g=>g.status==='done');
   let html='';
+  if(loadFailed)html+='<div style="background:rgba(231,76,60,.15);border:1px solid #e74c3c;color:#e74c3c;font-size:13px;font-weight:700;border-radius:10px;padding:10px 12px;margin-bottom:12px;">⚠ サーバーに接続できません。試合の読み込み・保存ができない状態です。</div>';
   html+='<div style="font-size:12px;font-weight:700;color:var(--dim);letter-spacing:1px;padding:4px 2px 8px;">予定試合</div>';
   html+=upcoming.length?upcoming.map(g=>gameCard(g)).join(''):'<p style="color:var(--dimmer);font-size:14px;padding:4px 0 12px;">予定されている試合はありません</p>';
   html+='<div style="font-size:12px;font-weight:700;color:var(--dim);letter-spacing:1px;padding:16px 2px 8px;border-top:1px solid var(--border);margin-top:8px;">スコア確定</div>';
@@ -175,8 +189,9 @@ async function createGame(){
   if(!opp){alert('対戦相手を入力してください');return;}
   const id='g_'+Date.now();
   const newGame={id,opp,date:date?date.replace('T',' ').slice(0,16):'日時未定',venue:venue||'球場未定',status:'upcoming',orders:9,scores:null,batters:null,pinchHitters:null,pitchers:null,finalScore:null};
+  const ok=await saveGameToSupabase(newGame, true);
+  if(!ok){alert('試合を保存できませんでした。\n通信環境を確認して、もう一度お試しください。');return;}
   games.unshift(newGame);
-  await saveGameToSupabase(newGame);
   closeNewGame();
   renderGameList();
 }
