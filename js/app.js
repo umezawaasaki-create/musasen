@@ -39,36 +39,39 @@ function scheduleSave(){
   updateAutosaveIndicator();
   saveTimer=setTimeout(()=>saveCurrentGame(),1500);
 }
+let autosaveResetTimer=null;
 function updateAutosaveIndicator(){
   const el=document.getElementById('autosave-indicator');
   if(!el)return;
+  clearTimeout(autosaveResetTimer);
+  el.classList.remove('saved');
   el.textContent='保存中...';
+}
+function resetAutosaveIndicator(){
+  const el=document.getElementById('autosave-indicator');
+  if(!el)return;
+  clearTimeout(autosaveResetTimer);
+  el.classList.remove('failed','saved');
+  el.textContent='自動保存中';
 }
 function setAutosaveFailed(){
   const el=document.getElementById('autosave-indicator');
   if(!el)return;
-  lastSavedAt=null;
+  clearTimeout(autosaveResetTimer);
   el.textContent='⚠ 保存失敗';
+  el.classList.remove('saved');
   el.classList.add('failed');
 }
 function setAutosaveSaved(){
   const el=document.getElementById('autosave-indicator');
   if(!el)return;
+  clearTimeout(autosaveResetTimer);
   el.classList.remove('failed');
-  lastSavedAt=new Date();
-  updateAutosaveTime();
+  el.classList.add('saved');
+  el.textContent='保存されました';
+  autosaveResetTimer=setTimeout(resetAutosaveIndicator,2000);
 }
-let lastSavedAt=null;
-function updateAutosaveTime(){
-  const el=document.getElementById('autosave-indicator');
-  if(!el||!lastSavedAt)return;
-  const diff=Math.floor((new Date()-lastSavedAt)/1000);
-  if(diff<60) el.textContent='保存済（たった今）';
-  else if(diff<3600) el.textContent='保存済（'+Math.floor(diff/60)+'分前）';
-  else el.textContent='保存済（'+Math.floor(diff/3600)+'時間前）';
-}
-setInterval(()=>{if(lastSavedAt)updateAutosaveTime();},30000);
-function saveCurrentGame(){if(!currentGame)return;currentGame.batters=JSON.parse(JSON.stringify(batters));currentGame.scores=JSON.parse(JSON.stringify(scores));currentGame.pitchers=JSON.parse(JSON.stringify(pitchers));currentGame.pinchHitters=JSON.parse(JSON.stringify(pinchHitters||{top:{},bot:{}}));currentGame.orders=ORDERS;let my=0,opp=0;for(let i=1;i<=INNINGS;i++){my+=scores[i].top||0;opp+=scores[i].bot||0;}currentGame.finalScore={my,opp};saveGameToSupabase(currentGame);}
+function saveCurrentGame(){if(!currentGame)return;currentGame.batters=JSON.parse(JSON.stringify(batters));currentGame.scores=JSON.parse(JSON.stringify(scores));currentGame.pitchers=JSON.parse(JSON.stringify(pitchers));currentGame.pinchHitters=JSON.parse(JSON.stringify(pinchHitters||{top:{},bot:{}}));currentGame.orders=ORDERS;let my=0,opp=0;for(let i=1;i<=INNINGS;i++){my+=scores[i].top||0;opp+=scores[i].bot||0;}currentGame.finalScore={my,opp};return saveGameToSupabase(currentGame);}
 function subscribeRealtime(){sb.channel('games-rt').on('postgres_changes',{event:'*',schema:'public',table:'games'},payload=>{if(!currentGame||(payload.new&&payload.new.id!==currentGame.id))loadGames();}).subscribe();}
 // STATE
 const INNINGS=9;
@@ -110,6 +113,7 @@ function showScreen(name){
   // ナビタブは常に表示・active更新
   const hNormal=document.getElementById('hdr-normal');
   const hScore=document.getElementById('hdr-scoreinput');
+  document.body.classList.toggle('hide-agent',name==='scoreinput');
   if(name==='scoreinput'){
     if(hNormal)hNormal.style.display='none';
     if(hScore)hScore.style.display='flex';
@@ -208,6 +212,7 @@ function openGame(gameId){
   else pitchers={my:[],opp:[]};
   if(g.status==='upcoming'){g.status='inprogress';saveGameToSupabase(g, true);}
   isDirty = false;
+  resetAutosaveIndicator();
   showScreen('scoreinput');
   setTimeout(()=>{curHalf='top';document.getElementById('pitcher-assign-wrap').innerHTML='';renderBatters();showSubTab('bat');},50);
 }
@@ -235,12 +240,15 @@ function tempSave(){ saveAndBack(); }
 
 async function confirmScore(){
   if(!currentGame) return;
+  if(!confirm('vs '+(currentGame.opp||'相手')+'\nスコアを確定しますか？'))return;
+  clearTimeout(saveTimer);
   let my=0,opp=0;
   for(let i=1;i<=INNINGS;i++){my+=scores[i].top||0;opp+=scores[i].bot||0;}
   currentGame.finalScore={my,opp};
   currentGame.matchResult=my>opp?'勝':my<opp?'負':my===opp&&my>0?'分':null;
   currentGame.status='done';
-  saveCurrentGame();
+  isDirty=false;
+  await saveCurrentGame();
   const _gid=document.getElementById('game-info-disp');if(_gid)_gid.textContent='';
   currentGame=null;
   await loadGames();

@@ -249,6 +249,13 @@ body.modal-open{overflow:hidden;position:fixed;width:100%;}
 
 @keyframes slowblink{0%,100%{opacity:1}50%{opacity:.3}}
 .autosave-indicator{background:#2ecc71;color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap;flex-shrink:0;animation:slowblink 2.5s ease-in-out infinite;}
+.autosave-indicator.saved{animation:none;}
+.si-hdr-row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;min-height:36px;}
+.si-hdr-btn{font-family:'Noto Sans JP',sans-serif;font-size:14px;font-weight:900;padding:7px 14px;border-radius:10px;cursor:pointer;white-space:nowrap;}
+.si-back{justify-self:start;background:transparent;border:1px solid var(--border);color:var(--text);}
+.si-confirm{justify-self:end;background:var(--gold);border:none;color:#1a1a1a;}
+.si-hdr-title{text-align:center;font-size:18px;font-weight:900;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+body.hide-agent .agent-fab{display:none;}
 .autosave-indicator.failed{background:#e74c3c;animation:none;}
 
 /* ===== AI AGENT ===== */

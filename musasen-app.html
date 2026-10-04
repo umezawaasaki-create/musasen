@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>⚾ ムサセンスコア</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=6">
+<link rel="stylesheet" href="css/style.css?v=7">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 </head>
@@ -17,9 +17,13 @@
     <button class="hdr-nav-btn active" id="hnav-score" onclick="showScreen('score')">スコア入力</button>
     <button class="hdr-nav-btn" id="hnav-archive" onclick="showScreen('archive')">通算成績</button>
   </div>
-  <div id="hdr-scoreinput" style="display:none;align-items:center;width:100%;gap:8px;min-height:40px;">
-    <div id="game-info-disp" style="flex:1;font-size:18px;font-weight:900;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
-    <div class="autosave-indicator" id="autosave-indicator">自動保存中</div>
+  <div id="hdr-scoreinput" style="display:none;flex-direction:column;width:100%;gap:6px;">
+    <div class="si-hdr-row">
+      <button class="si-hdr-btn si-back" onclick="saveAndBack()">‹ 戻る</button>
+      <div class="autosave-indicator" id="autosave-indicator">自動保存中</div>
+      <button class="si-hdr-btn si-confirm" onclick="confirmScore()">確定</button>
+    </div>
+    <div id="game-info-disp" class="si-hdr-title"></div>
   </div>
   <div id="game-info-disp" style="display:none;"></div>
 </div>
@@ -142,7 +146,7 @@
 <script src="js/config.js?v=5"></script>
 <script src="data/roster.js?v=5"></script>
 <script src="data/history.js?v=5"></script>
-<script src="js/app.js?v=6"></script>
+<script src="js/app.js?v=7"></script>
 
 <!-- ===== AI AGENT ===== -->
 <!-- フローティングボタン -->
